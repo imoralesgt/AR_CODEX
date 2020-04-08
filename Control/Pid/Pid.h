@@ -60,7 +60,6 @@ class Pid{
         float __getIntegratorValue();
         float __getDiffValue();
 
-
 };
 
 #endif

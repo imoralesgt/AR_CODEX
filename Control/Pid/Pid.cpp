@@ -21,7 +21,6 @@ IRM Public method definitions
 ==============================
 */
 
-
 //IRM Variables initialization. Set initial values to class global variables
 void Pid::pidInit(float p, float i, float d, float minI, float maxI){
   this->kP = p; this->kI = i; this->kD = d; //IRM PID Controller parameters (Kp, Ki, Kd)
@@ -206,4 +205,3 @@ float Pid::__getIntegratorValue(){
 float Pid::__getDiffValue(){
   return this->diff;
 }
-
