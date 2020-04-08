@@ -1,6 +1,6 @@
 //use template from https://github.com/imoralesgt/Ultrasonic
 
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "Pid.h"
 
 //IRM Discrete PID library for Arduino
@@ -24,9 +24,6 @@ Pid::~Pid(){
 
 
 
-
-
-
 Pid::pidInit(int p, int i, int d, int minI, int maxI){
    Kp = p; Ki = i; Kd = d; //IRM PID Controller parameters (Kp, Ki, Kd)
    minInt = minI; maxInt = maxI; //Limites del integrador
@@ -34,13 +31,6 @@ Pid::pidInit(int p, int i, int d, int minI, int maxI){
    derivator = 0; integrator = 0; //Condiciones iniciales
    error = 0; //Condiciones iniciales  
 }
-
-
-
-
-
-
-
 
 
 
