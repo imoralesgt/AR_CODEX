@@ -27,9 +27,6 @@ Pid::~Pid(){
 
 
 
-
-
-
 Pid::pidInit(int p, int i, int d, int minI, int maxI){
    Kp = p; Ki = i; Kd = d; //IRM PID Controller parameters (Kp, Ki, Kd)
    minInt = minI; maxInt = maxI; //Limites del integrador
