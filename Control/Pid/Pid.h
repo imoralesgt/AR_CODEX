@@ -12,7 +12,7 @@ class Pid{
     */
 
     float kP; float kI; float kD;
-    float minInt; float maxInt;
+    float minOut; float maxOut;
     float integrator; float diff; //IRM Diff stands for differentiation
     float error;
     float setPoint;
@@ -22,7 +22,7 @@ class Pid{
     public:
 
         //IRM Constructor and destructor
-        Pid(float p, float i, float d, float minI, float maxI);
+        Pid(float p, float i, float d, float minO, float maxO);
         ~Pid();
 
 
@@ -32,7 +32,7 @@ class Pid{
         IRM Class-specific public method prototypes
         ===========================================
         */
-        void  pidInit(float p, float i, float d, float minI, float maxI);
+        void  pidInit(float p, float i, float d, float minO, float maxO);
         void  pidSetPoint(float sp);
         float pidUpdate(float currentValue);
 
@@ -54,8 +54,8 @@ class Pid{
         float __getKp();
         float __getKi();
         float __getKd();
-        float __getMinInt();
-        float __getMaxInt();
+        float __getMinOut();
+        float __getMaxOut();
 
         float __getIntegratorValue();
         float __getDiffValue();

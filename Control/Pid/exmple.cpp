@@ -1,5 +1,23 @@
 #include "Pid.h"
 
+
+
+
+  //IRM Work on Direction conditions
+  /*
+  // Normalmente esta condicion NO SE COLOCA
+  // Fue para compensar la limitacion que impone el 
+  // uso de un ventilador (el ventilador no puede "calentar"
+  // el ambiente cuando gira al reves)
+  if(PID > 255){
+    PID = 255;
+  }else if(PID < 0){
+    PID = 0;
+  }
+  */
+
+
+
 // const byte PWM_PIN = 37; //Ventilador
 // const byte POTENCIOMETRO = A3; //LM35
 

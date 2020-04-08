@@ -4,9 +4,20 @@
 //IRM Discrete PID library for Arduino
 
 //IRM Constructor: define initial variables
-Pid::Pid(float p, float i, float d, float minI, float maxI){
+Pid::Pid(float p, float i, float d, float minO, float maxO){
+
+  /*
+  IRM Input Parameters:
+    - p : Proportional (Kp) constant
+    - i : Integration  (Ki) constant
+    - d : Derivative   (Kd) constant
+    - minO : Minimum PID output value; e.g. 0
+    - maxO : Maximum PID output value; e.g. 255
+  */
+
+
   //IRM Initialize PID with user-specified parameters
-  this->pidInit(p, i, d, minI, maxI);
+  this->pidInit(p, i, d, minO, maxO);
 
 }
 
@@ -22,9 +33,9 @@ IRM Public method definitions
 */
 
 //IRM Variables initialization. Set initial values to class global variables
-void Pid::pidInit(float p, float i, float d, float minI, float maxI){
+void Pid::pidInit(float p, float i, float d, float minO, float maxO){
   this->kP = p; this->kI = i; this->kD = d; //IRM PID Controller parameters (Kp, Ki, Kd)
-  this->minInt = minI; this->maxInt = maxI; //IRM Integrator cummulative limits
+  this->minOut = minO; this->maxOut = maxO; //IRM Integrator cummulative limits
 
   //IRM Initial values for PID
   this->__resetIDvalues(); //IRM Reset (I) and (D) components
@@ -73,18 +84,11 @@ float Pid::pidUpdate(float currentValue){
   this->__accumulateIntegration(err);
   
   float i = this->__getIntegratorValue(); //IRM Current integrator value
-  float mi = this -> __getMinInt(); //IRM Min cummulative integrator value
-  float mx = this -> __getMaxInt(); //IRM Max cummulative integrator value
 
-  //IRM Truncate integrator to corresponding min/max limits in case of overflow
-  if(i > mx){
-    this->__setIntegratorValue(mx);
-  }else if(i < mi){
-    this->__setIntegratorValue(mi);
-  }
-
+  float ki = this->__getKi(); //IRM Ki constant retreived from constructor
+  
   //IRM Compute (I) component based on updated values times Ki constant
-  iValue = this->__getIntegratorValue() * this->__getKi();
+  iValue = this->__getIntegratorValue() * ki;
 
 
 
@@ -112,20 +116,21 @@ float Pid::pidUpdate(float currentValue){
 
   PID = pValue + iValue + dValue;
 
-  
-  //IRM Work on Direction conditions
-  /*
-  // Normalmente esta condicion NO SE COLOCA
-  // Fue para compensar la limitacion que impone el 
-  // uso de un ventilador (el ventilador no puede "calentar"
-  // el ambiente cuando gira al reves)
-  if(PID > 255){
-    PID = 255;
-  }else if(PID < 0){
-    PID = 0;
+  //IRM Truncate integrator to compensate PID (clamp to) min/max output value, avoiding Windup
+
+  float mi = this -> __getMinOut(); //IRM Min output possible value
+  float mx = this -> __getMaxOut(); //IRM Max output possible value
+
+  if(PID > mx){
+    i -= ((PID - mx) / ki);
+    this->__setIntegratorValue(i);
+    PID = mx;
+  }else if(PID < mi){
+    i -= ((PID - mi) / ki);
+    this->__setIntegratorValue(i);
+    PID = mi;
   }
-  */
-  
+
   return PID;
 }
 
@@ -185,12 +190,12 @@ float Pid::__getKd(){
   return this->kD;
 }
 
-float Pid::__getMinInt(){
-  return this->minInt;
+float Pid::__getMinOut(){
+  return this->minOut;
 }
 
-float Pid::__getMaxInt(){
-  return this->maxInt;
+float Pid::__getMaxOut(){
+  return this->maxOut;
 }
 
 
