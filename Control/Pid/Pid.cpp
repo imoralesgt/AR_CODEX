@@ -1,20 +1,13 @@
-//use template from https://github.com/imoralesgt/Ultrasonic
-
-//#include "Arduino.h"
 #include "Pid.h"
+#include "globals.h"
 
 //IRM Discrete PID library for Arduino
 
 //IRM Constructor: define initial variables
 Pid::Pid(float p, float i, float d, float minI, float maxI){
-  float kP = p; float kI = i; float kD = d;
-  float minInt = minI; float maxInt = maxInt;
+  //IRM Initialize PID with user-specified parameters
+  this->pidInit(p, i, d, minI, maxI);
 
-
-  
-  //IRM initialize 
-  float integration = 0; //IRM 
-  float differentiation = 0;
 }
 
 //IRM Destructor: do nothing
@@ -22,110 +15,195 @@ Pid::~Pid(){
   ;
 }
 
+/*
+==============================
+IRM Public method definitions
+==============================
+*/
 
 
-Pid::pidInit(int p, int i, int d, int minI, int maxI){
-   Kp = p; Ki = i; Kd = d; //IRM PID Controller parameters (Kp, Ki, Kd)
-   minInt = minI; maxInt = maxI; //Limites del integrador
+//IRM Variables initialization. Set initial values to class global variables
+void Pid::pidInit(float p, float i, float d, float minI, float maxI){
+  this->kP = p; this->kI = i; this->kD = d; //IRM PID Controller parameters (Kp, Ki, Kd)
+  this->minInt = minI; this->maxInt = maxI; //IRM Integrator cummulative limits
+
+  //IRM Initial values for PID
+  this->__resetIDvalues(); //IRM Reset (I) and (D) components
+  this->error = 0; //IRM reset current sample error (P)
    
-   derivator = 0; integrator = 0; //Condiciones iniciales
-   error = 0; //Condiciones iniciales  
+}
+
+//IRM Establish set-point value
+void Pid::pidSetPoint(float sp){
+  this->setPoint = sp; //IRM Establish new set-point value
+  this->__resetIDvalues(); //IRM Reset (I) and (D) components
 }
 
 
 
 
-const byte PWM_PIN = 37; //Ventilador
-const byte POTENCIOMETRO = A3; //LM35
-
-signed int Kp, Ki, Kd, minInt, maxInt;
-signed int setPoint;
-signed int derivator, integrator;
-signed int error;
-
-void pidInit(int p, int i, int d, int minI, int maxI){
-   Kp = p; Ki = i; Kd = d; //Coeficientes del controlador PID
-   minInt = minI; maxInt = maxI; //Limites del integrador
-   
-   derivator = 0; integrator = 0; //Condiciones iniciales
-   error = 0; //Condiciones iniciales
-}
-
-void pidSetPoint(signed int set){
-  setPoint = set; //Establecer valor deseado
-  derivator = 0; //Inicializar condiciones iniciales
-  integrator = 0; //Eliminar todo error acumulado al reiniciar
-}
-
-signed int pidUpdate(signed int currentValue){
-  signed int pValue, iValue, dValue, PID;
-  error = setPoint - currentValue; 
-
-  //Parte proporcional del controlador
-  pValue = Kp*error;
+//IRM Feed PID with current sample and fetch next computed output value
+float Pid::pidUpdate(float currentValue){
+  float pValue, iValue, dValue, PID;
+  this->__setErrorValue(setPoint - currentValue); //IRM Compute current error value
   
-  //Integral discreta
-  integrator = integrator + error;
-  if (integrator > maxInt){
-    integrator = maxInt;
-  }else if(integrator < minInt){
-    integrator = minInt;
+  
+  float err = this->__getErrorvalue(); //IRM Local updated error value during current sample
+
+  /*
+  ==========================
+        (P) Computation
+  ==========================
+  */
+
+  //IRM Compute proportional error component
+  pValue = this->__getKp()*err;
+  
+
+
+  /*
+  ==========================
+        (I) Computation
+  ==========================
+  */
+
+  //IRM Discrete integral. Sample period must remain constant to achieve a reliable I value
+
+
+  //IRM accumulate current error to integrator value
+  this->__accumulateIntegration(err);
+  
+  float i = this->__getIntegratorValue(); //IRM Current integrator value
+  float mi = this -> __getMinInt(); //IRM Min cummulative integrator value
+  float mx = this -> __getMaxInt(); //IRM Max cummulative integrator value
+
+  //IRM Truncate integrator to corresponding min/max limits in case of overflow
+  if(i > mx){
+    this->__setIntegratorValue(mx);
+  }else if(i < mi){
+    this->__setIntegratorValue(mi);
   }
-  //Parte integral del controlador
-  iValue = integrator*Ki;
-  
-  
-  //Derivada discreta
-  dValue = Kd*(error - derivator);
-  derivator = error; //Diferencia del valor anterior con el valor actual
-  
+
+  //IRM Compute (I) component based on updated values times Ki constant
+  iValue = this->__getIntegratorValue() * this->__getKi();
+
+
+
+  /*
+  ==========================
+        (D) Computation
+  ==========================
+  */
+
+  //IRM Retrieve current diff(erentiation) value
+  float d = this->__getDiffValue();
+
+  //IRM Compute (D) component based on updated values times Kd constant
+  dValue = (err - d)*(this->__getKd()); 
+
+  //IRM Compute current diff(erentiation) value for next sample (set as previous error)
+  this->__setDiffValue(err);
+
+
+  /*
+  ==========================
+       (PID) Computation
+  ==========================
+  */
+
   PID = pValue + iValue + dValue;
+
   
-  
-  /*Normalmente esta condicion NO SE COLOCA
-  Fue para compensar la limitacion que impone el 
-  uso de un ventilador (el ventilador no puede "calentar"
-  el ambiente cuando gira al reves)*/
+  //IRM Work on Direction conditions
+  /*
+  // Normalmente esta condicion NO SE COLOCA
+  // Fue para compensar la limitacion que impone el 
+  // uso de un ventilador (el ventilador no puede "calentar"
+  // el ambiente cuando gira al reves)
   if(PID > 255){
     PID = 255;
   }else if(PID < 0){
     PID = 0;
   }
+  */
   
   return PID;
 }
 
 
-void setup()
-{
-  
-  pinMode(PWM_PIN, OUTPUT);
-  
-  Serial.begin(115200);
-  pinMode(POTENCIOMETRO, INPUT);
-  
-  //Extremadamente importante calibrar adecuadamente los coeficiente
-  pidInit(30, 8, 0, -100, 100); //Coeficientes y limites de integrador
-  pidSetPoint(100); //Temperatura deseada
+
+
+
+/*
+==============================
+IRM Private method definitions
+==============================
+*/
+
+//IRM Reset cummulative error (I) and diference between prior and current error (D) components
+void Pid::__resetIDvalues(){
+  this->integrator = 0;
+  this->diff       = 0;
 }
 
-void loop()
-{
-  uint16_t temp;
-  int16_t pwmOut;
-  temp = analogRead(POTENCIOMETRO) / 16;
-  
-  pwmOut = pidUpdate(temp); //Actualizar el sistema de control
-                            //y obtener nuevo valor
+//IRM Retrieve current integration value and add up current error (e)
+void Pid::__accumulateIntegration(float e){
+  this->__setIntegratorValue(this->__getIntegratorValue() + e);
+}
 
-  analogWrite(PWM_PIN, pwmOut);
-  
-  Serial.print("CurrentValue: ");
-  Serial.println(temp);
-  Serial.print("PWMValue: ");
-  Serial.println(pwmOut);
-  Serial.println("");
-  
-  delay(100);
-  
-}  
+
+/*
+===============================
+IRM Private setters and getters
+===============================
+*/
+
+//IRM Setters
+void Pid::__setErrorValue(float e){
+  this->error = e;
+}
+
+void Pid::__setIntegratorValue(float i){
+  this->integrator = i;
+}
+
+void Pid::__setDiffValue(float d){
+  this->diff = d;
+}
+
+
+
+//IRM Getters
+float Pid::__getKp(){
+  return this->kP;
+}
+
+float Pid::__getKi(){
+  return this->kI;
+}
+
+float Pid::__getKd(){
+  return this->kD;
+}
+
+float Pid::__getMinInt(){
+  return this->minInt;
+}
+
+float Pid::__getMaxInt(){
+  return this->maxInt;
+}
+
+
+float Pid::__getErrorvalue(){
+  return this->error;
+}
+
+float Pid::__getIntegratorValue(){
+  return this->integrator;
+}
+
+float Pid::__getDiffValue(){
+  return this->diff;
+}
+
