@@ -74,7 +74,8 @@ Note: Fan isn't directly driven by Arduino, use a MOSFET or a L293/L298 to drive
 
 
 //Do NOT modify this
-#define SAMPLING_PERIOD 1.0/SAMPLING_FRECUENCY 
+#define US_IN_SECONDS 1000000L //Do NOT modifiy this (microseconds in seconds) 
+#define SAMPLING_PERIOD 1.0/SAMPLING_FREQUENCY 
 #define SAMPLING_MICROS (unsigned long) SAMPLING_PERIOD * US_IN_SECONDS
 //Do NOT modify this
 
