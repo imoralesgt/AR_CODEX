@@ -212,10 +212,3 @@ float Pid::__getIntegratorValue(){
 float Pid::__getDiffValue(){
 	return this->diff;
 }
-
-
-// Pid myPid(1.0, 1.0, 1.0, 0, 255);
-// int main(void){
-//   myPid.pidSetPoint(5.0);
-//   return 0;
-// }
