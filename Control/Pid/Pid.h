@@ -1,25 +1,26 @@
+#include "globals.h"
+
 #ifndef PID_H
 #define PID_H
 
-#include "globals.h"
-
 class Pid{
 
-    /*
-    ===============================
-    Class-specific global variables
-    ===============================
-    */
-
-    float kP; float kI; float kD;
-    float minOut; float maxOut;
-    float integrator; float diff; //IRM Diff stands for differentiation
-    float error;
-    float setPoint;
-
-
-
     public:
+
+        /*
+        ===============================
+        Class-specific global variables
+        ===============================
+        */
+
+        float kP; float kI; float kD;
+        float minOut; float maxOut;
+        float integrator; float diff; //IRM Diff stands for differentiation
+        float error;
+        float setPoint;
+
+
+
 
         //IRM Constructor and destructor
         Pid(float p, float i, float d, float minO, float maxO);
@@ -32,8 +33,14 @@ class Pid{
         IRM Class-specific public method prototypes
         ===========================================
         */
+
+        //Variables initialization. Set initial values to class global variables
         void  pidInit(float p, float i, float d, float minO, float maxO);
+
+        //Establish set-point value
         void  pidSetPoint(float sp);
+
+        //Feed PID with current sample and fetch next computed output value
         float pidUpdate(float currentValue);
 
     private:
