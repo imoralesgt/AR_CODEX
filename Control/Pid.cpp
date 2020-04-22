@@ -40,7 +40,7 @@ void Pid::pidInit(float p, float i, float d, float minO, float maxO){
 	this->minOut = minO; this->maxOut = maxO; //IRM Integrator cummulative limits
 
 	//IRM Initial values for PID
-	this->__resetIDvalues(); //IRM Reset (I) and (D) components
+	this->resetIDvalues(); //IRM Reset (I) and (D) components
 	this->error = 0; //IRM reset current sample error (P)
 	 
 }
@@ -48,11 +48,31 @@ void Pid::pidInit(float p, float i, float d, float minO, float maxO){
 //IRM Establish set-point value
 void Pid::pidSetPoint(float sp){
 	this->setPoint = sp; //IRM Establish new set-point value
-	this->__resetIDvalues(); //IRM Reset (I) and (D) components
+	this->resetIDvalues(); //IRM Reset (I) and (D) components
+}
+
+//IRM Return current set-point value
+float Pid::getSetPoint(){
+	return this->setPoint;
 }
 
 
+float Pid::getMinOut(){
+	return this->minOut;
+}
 
+float Pid::getMaxOut(){
+	return this->maxOut;
+}
+
+//IRM Set new min actuator output value
+void Pid::setNewMinOutput(float newMin){
+	this->minOut = newMin;
+}
+
+void Pid::setNewMaxOutput(float newMax){
+	this->maxOut = newMax;
+}
 
 //IRM Feed PID with current sample and fetch next computed output value
 float Pid::pidUpdate(float currentValue){
@@ -120,8 +140,8 @@ float Pid::pidUpdate(float currentValue){
 
 	//IRM Truncate integrator to compensate PID (clamp to) min/max output value, avoiding Windup
 
-	float mi = this -> __getMinOut(); //IRM Min output possible value
-	float mx = this -> __getMaxOut(); //IRM Max output possible value
+	float mi = this -> getMinOut(); //IRM Min output possible value
+	float mx = this -> getMaxOut(); //IRM Max output possible value
 
 	if(PID > mx){
 		i -= ((PID - mx) / ki);
@@ -147,7 +167,7 @@ IRM Private method definitions
 */
 
 //IRM Reset cummulative error (I) and diference between prior and current error (D) components
-void Pid::__resetIDvalues(){
+void Pid::resetIDvalues(){
 	this->integrator = 0;
 	this->diff       = 0;
 }
@@ -191,15 +211,6 @@ float Pid::__getKi(){
 float Pid::__getKd(){
 	return this->kD;
 }
-
-float Pid::__getMinOut(){
-	return this->minOut;
-}
-
-float Pid::__getMaxOut(){
-	return this->maxOut;
-}
-
 
 float Pid::__getErrorvalue(){
 	return this->error;

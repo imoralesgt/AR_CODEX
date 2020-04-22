@@ -43,10 +43,27 @@ class Pid{
         //Feed PID with current sample and fetch next computed output value
         float pidUpdate(float currentValue);
 
+        //Return current set-point value
+        float getSetPoint();
+
+        //Return Min actuator output value
+        float getMinOut();
+
+        //Return Max actuator output value
+        float getMaxOut();
+
+        //Set new Min actuator output value
+        void setNewMinOutput(float newMin);
+
+        //Set new Max actuator output value
+        void setNewMaxOutput(float newMax);
+
+        //Reset prior I&D PID Values
+        void resetIDvalues();
+
     private:
 
         //IRM encapsulated method prototypes
-        void __resetIDvalues();
         void __accumulateIntegration(float e);
 
 
@@ -61,8 +78,6 @@ class Pid{
         float __getKp();
         float __getKi();
         float __getKd();
-        float __getMinOut();
-        float __getMaxOut();
 
         float __getIntegratorValue();
         float __getDiffValue();

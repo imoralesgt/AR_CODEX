@@ -1,6 +1,7 @@
 #ifndef ARCONTROL_H
 #define ARCONTROL_H
 
+//ENUMERATE STATUS INSPIRATION EXPIRATION
 
 class arcontrol{
 
@@ -21,6 +22,8 @@ class arcontrol{
         such as [Respirations per minutes] = 1/(minutes)
        */
 
+        enum Direction {INSP, EXPI};
+
         //IRM Sensor-related variables
         float pressure = 0.0;
         float airFlow  = 0.0;
@@ -33,8 +36,20 @@ class arcontrol{
         float spRPM      = 0.0; //Respirations-per-minute set-point
         float spIEratio  = 0.0; //I:E ratio set-point
 
+        //IRM Control-related variables
+        float controlSetPoint = 0.0;
+
         //IRM initialization (set-point) parameters received from GUI FLAG
         unsigned int initParametersReceived;
+
+        //IRM current cycle (INSP/EXP) volume, computed based on flow
+        float currentCycleVolume = 0.0;
+
+        //IRM Current flow (volume slope) set point
+        float currentCycleSlope = 0.0;
+
+        //IRM Flow Direction
+        Direction currentDirection = INSP;
 
 
 
@@ -54,6 +69,48 @@ class arcontrol{
 
         //IRM Gets init parameters from GUI I2C Controller, which are set as working set-points. Returns 0 if everything ok
         int setInitParameters(float pressure, float minVol, float maxVol, float rpm, float ieRatio);
+
+        //IRM Updates current set-point value in PID controller
+        void updateSetPoint(float sp);
+
+        //Override default MAX value if max pressure is reached
+        void __reduceMaxPIDOut(float max);
+
+        //Main control system method, should be called periodically
+        float controlFlow(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio);
+
+        //Compute current cycle volume
+        float computeCurrentCycleVolume(float newDeltaVolume);
+
+
+        // Public setters & getters
+
+        //IRM return current set point from PID controller
+        float getCurrentSetPoint();
+        
+        //Get max working pressure value, to protect patient's lungs
+        float getSpPressure();
+
+        //Get min opetariontal volume set-point, to avoid negative pressure
+        float getSpMinVol();
+
+        //Get max opetariontal volume set-point, to protect patient's lungs
+        float getSpMaxVol();
+
+        //Get respirations per minute set-point (respiration period)
+        float getSpRPM();
+
+        //Get Inspiration:Espiration ratio (respiration duty cycle)
+        float getSpIeRatio();
+
+
+        //Get current cycle volume
+        float getCurrentCycleVolume();
+
+        //Set current cycle volume
+        float setCurrentCycleVolume(float newVolume);
+
+
 
     private:
 
@@ -80,8 +137,6 @@ class arcontrol{
         //Compute Expiration rate (slope). Dependent variable: Volume, Independent var: time (expiration time) 
         //Expected negative slope
         float __computeESlope(float rpm, float ieRatio, float minVol, float maxVol);
-
-
 
 
         /*
@@ -114,20 +169,6 @@ class arcontrol{
         //Get Init parameters flag
         int __getInitParametersFlag();
 
-        //Get max working pressure value, to protect patient's lungs
-        float __getSpPressure();
-
-        //Get min opetariontal volume set-point, to avoid negative pressure
-        float __getSpMinVol();
-
-        //Get max opetariontal volume set-point, to protect patient's lungs
-        float __getSpMaxVol();
-
-        //Get respirations per minute set-point (respiration period)
-        float __getSpRPM();
-
-        //Get Inspiration:Espiration ratio (respiration duty cycle)
-        float __getSpIeRatio();
 
 };
 
