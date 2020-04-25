@@ -8,6 +8,8 @@ volatile unsigned int count = 0;
 int currentState = 0;
 int printOk = 0;
 
+int intToggle = 0;
+
 float myOutput;
 float myFeedback;
 
@@ -21,23 +23,30 @@ void setup(){
   pinMode(PIN_MOTOR0, OUTPUT);
   digitalWrite(PIN_MOTOR0, 0);
 
+  pinMode(PIN_MOTOR1, OUTPUT);
+  digitalWrite(PIN_MOTOR1, 0);
+
   //General interrupts enable bit clear (Status Register)
   SREG &= ~0x80;
 
   //Compare A interrupt enable
   TIMSK2 |= 0x02; 
 
-  //Comparator A register comparator limit (overflow value)
-  OCR2A = 249; //250 - 1
+  //Clear timer value on compare match mode (CTC mode)
+  TCCR2A = 0x02;
+  TCCR2B &= ~0x08;
 
   //Prescaler /64 clk source
-  OCR2A = 0x04;
+  TCCR2B |= 0x04;
+
+  //Comparator A register comparator limit (overflow value)
+  OCR2A = 61; //250 - 1
 
   //General interrupt enable bit set (Status Register)
   SREG |= 0x80;
 
   //62.5 KHz Clk Source for Timer 2
-  //250 counts compare overflow generates interrupt
+  //250 counts compare match generates interrupt
   //Interrupt rate = 250 Hz
 
   Serial.begin(115200);
@@ -63,7 +72,10 @@ void loop(){
 
 
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
-  if(++count == 249){ //1 second interrupt 
+  intToggle ^= 1;
+  digitalWrite(PIN_MOTOR0, intToggle);
+  //analogWrite(PIN_MOTOR1, myOutput);
+  if(++count == 599){ //600 miliseconds interrupt (min inspiration period)
     digitalWrite(LED_BUILTIN, currentState);
     currentState ^= 0x01; //Toggle LED_BUILTIN
     if(currentState){

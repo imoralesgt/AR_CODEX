@@ -24,7 +24,7 @@ Control-related Globals
 #define MOTOR_MAX_OUT 255
 
 //Discrete PID update period (seconds)
-#define DT 0.002 //2 miliseconds (500 Hz)
+#define DT 0.004 //4 miliseconds (250 Hz)
 
 //Actuator output reduction factor when max pressure is reached
 #define OUTPUT_REDUCTION_FACTOR 31.0/32.0 //Reduce output speed in 1/32 of current value

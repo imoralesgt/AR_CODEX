@@ -24,6 +24,9 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, false);
 
+  pinMode(9, OUTPUT);
+  digitalWrite(9, 0);
+
   //General Interrupts Disable bit (Status Register)
   SREG &= ~0x80; 
 
@@ -46,7 +49,7 @@ void setup() {
 
   ledpp.pidSetPoint(5.0);
 
-  Serial.begin(921600);
+  Serial.begin(115200);
 
   pinMode(A0, INPUT);
  
@@ -68,6 +71,7 @@ void loop() {
 
 //ISR(TIMER2_OVF_vect){ //No overflow used any more
 ISR(TIMER2_COMPA_vect){ //Comparison overflow
+    analogWrite(9, myOutput);
     if(++cuenta >= 249){ //1 second interrupt
       digitalWrite(LED_BUILTIN, currentState);
       currentState ^= 0x01; //Toggle LED
