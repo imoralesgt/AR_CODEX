@@ -46,7 +46,7 @@ void setup() {
 
   ledpp.pidSetPoint(5.0);
 
-  Serial.begin(115200);
+  Serial.begin(921600);
 
   pinMode(A0, INPUT);
  
