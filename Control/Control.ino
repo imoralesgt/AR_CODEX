@@ -29,6 +29,9 @@ void setup(){
   //General interrupts enable bit clear (Status Register)
   SREG &= ~0x80;
 
+  //Disable power-saving feature (enables Timer 2)
+  PPR &= ~0x40;
+
   //Compare A interrupt enable
   TIMSK2 |= 0x02; 
 
