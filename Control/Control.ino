@@ -40,14 +40,14 @@ void setup(){
   TCCR2B |= 0x04;
 
   //Comparator A register comparator limit (overflow value)
-  OCR2A = 61; //250 - 1
+  OCR2A = 61; //62 - 1
 
   //General interrupt enable bit set (Status Register)
   SREG |= 0x80;
 
   //62.5 KHz Clk Source for Timer 2
-  //250 counts compare match generates interrupt
-  //Interrupt rate = 250 Hz
+  //62 counts compare match generates interrupt
+  //Interrupt rate = 1 kHz
 
   Serial.begin(115200);
 
