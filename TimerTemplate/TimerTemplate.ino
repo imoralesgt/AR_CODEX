@@ -1,3 +1,5 @@
+volatile unsigned int timeSync = 0;
+
 
 void setup(){
 
@@ -32,6 +34,13 @@ void setup(){
     //Your setup code here!
 
 
+    //Timer synchronization 
+    timeSync = 0;
+    while(timeSync < 1){
+        ;
+    }
+
+
 }
 
 void loop(){
@@ -44,4 +53,9 @@ void loop(){
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
     //Interrupt code here
     //Modify interupt flags here
+
+
+
+    //Timer synchronization
+    timeSync = 1;
 }
