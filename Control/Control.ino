@@ -10,6 +10,7 @@ int printOk = 0;
 
 int intToggle = 0;
 int flagToggle = 0;
+volatile int timerDone = 0; //MUST BE VOLATILE TO ALLOW DYNAMIC IN-ISR MODIFICATION
 
 float myOutput;
 float myFeedback;
@@ -70,14 +71,14 @@ void setup(){
 	TCCR2B |= 0x04;
 
 	//Comparator A register comparator limit (overflow value)
-	OCR2A = 61; //62 - 1
+	OCR2A = 249; //250 - 1
 
 	//General interrupt enable bit set (Status Register)
 	SREG |= 0x80;
 
 	//62.5 KHz Clk Source for Timer 2
-	//62 counts compare match generates interrupt
-	//Interrupt rate = 1 kHz
+	//250 counts compare match generates interrupt
+	//Interrupt rate = 250 Hz
 
 	Serial.begin(115200);
 
@@ -89,6 +90,9 @@ void setup(){
 }
 
 void loop(){
+
+	digitalWrite(PIN_MOTOR1, flagToggle);
+	
 	myFeedback = analogRead(A0);
 	myOutput = controlador.controlFlow((float)(myFeedback/100.0), 1.8, 16.5, 0.4);
 	pidPs++;
@@ -99,19 +103,23 @@ void loop(){
 		printOk ^= printOk;
 	}
 
-	if(TIFR2){
-		flagToggle ^= 1;
+
+	//Timer synchronization with Timer 2 ISR
+	timerDone = 0;
+	while(timerDone < 1){
+	 	;
 	}
 
-	digitalWrite(PIN_MOTOR2, flagToggle);
+	
 }
 
 
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 	intToggle ^= 1;
+	flagToggle ^= 1;
 	digitalWrite(PIN_MOTOR0, intToggle);
 	//analogWrite(PIN_MOTOR1, myOutput);
-	if(++count == 599){ //600 miliseconds interrupt (min inspiration period)
+	if(++count == 599/4){ //600 miliseconds interrupt (min inspiration period)
 		digitalWrite(LED_BUILTIN, currentState);
 		currentState ^= 0x01; //Toggle LED_BUILTIN
 		if(currentState){
@@ -119,4 +127,7 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 		}
 		count = 0;
 	}
+
+	timerDone++; //Timer synchronization with loop() polling 
+
 }
