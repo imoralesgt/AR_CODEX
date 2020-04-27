@@ -3,6 +3,44 @@ volatile unsigned int timeSync = 0;
 
 void setup(){
 
+    /*
+	=============
+	TIMER 1 SETUP
+	=============
+	*/
+
+	//General interrupts enable bit clear (Status Register)
+	SREG &= ~0x80;
+
+	//Disable power-saving feature (enables Timer 1)
+	PRR &= ~0x80;
+
+	//Compare A interrupt enable
+	TIMSK1 |= 0x02; 	
+
+	//Clear timer value on compare match mode (CTC mode)	
+	TCCR1A  = 0x00;
+	TCCR1B |= 0x08;
+
+	//Prescaler /8 clk source (higher resolution 16-bit timer)
+	TCCR1B |= 0x02;
+
+	//Comparator A register limit (overflow value)
+	//Comparator set to 249 counts (250 - 1)
+	OCR1A = 249;
+
+	//General interrupt enable bit set (Status Register)
+	//SREG |= 0x80;	 //Won't enable here, as Timer 2 setup is next
+
+
+
+
+    /*
+    =============
+    TIMER 2 SETUP
+    =============
+    */
+
     //General interrupts enable bit clear (Status Register)
     SREG &= ~0x80;
 
@@ -50,6 +88,7 @@ void loop(){
 }
 
 
+//TIMER 2 used as system clock
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
     //Interrupt code here
     //Modify interupt flags here
@@ -58,4 +97,14 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 
     //Timer synchronization
     timeSync = 1;
+}
+
+
+
+//TIMER 1 used for motor control
+ISR(TIMER1_COMPA_vect){
+    //Interrupt code here
+    //Modify interupt flags here
+
+
 }

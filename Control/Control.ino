@@ -12,6 +12,8 @@ int intToggle = 0;
 int flagToggle = 0;
 volatile int timerDone = 0; //MUST BE VOLATILE TO ALLOW DYNAMIC IN-ISR MODIFICATION
 
+int intToggle2 = 0;
+
 float myOutput;
 float myFeedback;
 
@@ -29,6 +31,9 @@ void setup(){
 	pinMode(PIN_MOTOR1, OUTPUT);
 	digitalWrite(PIN_MOTOR1, 0);
 
+	pinMode(PIN_MOTOR2, OUTPUT);
+	digitalWrite(PIN_MOTOR2, 0);
+
 	/*
 	=============
 	TIMER 1 SETUP
@@ -40,11 +45,30 @@ void setup(){
 	//Disable power-saving feature (enables Timer 1)
 	PRR &= ~0x80;
 
+	//Compare A interrupt enable
+	TIMSK1 |= 0x02; 	
+
+	//Clear timer value on compare match mode (CTC mode)	
+	TCCR1A  = 0x00;
+	TCCR1B |= 0x08;
+
+	//Prescaler /8 clk source (higher resolution 16-bit timer)
+	TCCR1B |= 0x02;
+
+	//Comparator A register limit (overflow value)
+	//Comparator set to 249 counts (250 - 1)
+	OCR1A = 249;
+
+	/*
+	OCR1AH = 0x07; //High byte
+	TEMP = 0x07;
+	OCR1AL = 0xCF; //Low byte
+	*/
+
 	
 
-
-
-
+	//General interrupt enable bit set (Status Register)
+	//SREG |= 0x80;	 //Won't enable here, as Timer 2 setup is next
 
 
 
@@ -70,7 +94,7 @@ void setup(){
 	//Prescaler /64 clk source
 	TCCR2B |= 0x04;
 
-	//Comparator A register comparator limit (overflow value)
+	//Comparator A register limit (overflow value)
 	OCR2A = 249; //250 - 1
 
 	//General interrupt enable bit set (Status Register)
@@ -116,7 +140,7 @@ void loop(){
 
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 	intToggle ^= 1;
-	flagToggle ^= 1;
+	
 	digitalWrite(PIN_MOTOR0, intToggle);
 	//analogWrite(PIN_MOTOR1, myOutput);
 	if(++count == 599/4){ //600 miliseconds interrupt (min inspiration period)
@@ -128,6 +152,12 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 		count = 0;
 	}
 
-	timerDone++; //Timer synchronization with loop() polling 
+	//Timer synchronization with loop() polling 
+	flagToggle ^= 1;
+	timerDone++;
+}
 
+ISR(TIMER1_COMPA_vect){
+	intToggle2 ^= 1;
+	digitalWrite(PIN_MOTOR2, intToggle2);
 }

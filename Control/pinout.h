@@ -3,6 +3,6 @@
 
 #define PIN_MOTOR0 9
 #define PIN_MOTOR1 8
-#define PIN_MOTOR2 16
+#define PIN_MOTOR2 7
 
 #endif
