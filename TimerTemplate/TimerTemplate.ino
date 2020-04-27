@@ -58,7 +58,7 @@ void setup(){
     TCCR2B |= 0x04;
 
     //Comparator A register comparator limit (overflow value)
-    OCR2A = 61; //62 - 1
+    OCR2A = 249; //250 - 1
 
     //General interrupt enable bit set (Status Register)
     SREG |= 0x80;
@@ -72,11 +72,7 @@ void setup(){
     //Your setup code here!
 
 
-    //Timer synchronization 
-    timeSync = 0;
-    while(timeSync < 1){
-        ;
-    }
+
 
 
 }
@@ -85,6 +81,11 @@ void loop(){
     //Non-blocking (interrupt-driven flags polling)
 
     
+    //Timer synchronization 
+    timeSync = 0;
+    while(timeSync < 1){
+        ;
+    }
 }
 
 
