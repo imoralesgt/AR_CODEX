@@ -2,9 +2,49 @@
 #define GLOBALS_H
 
 //IRM Arduino workaround for GCC compilation in x86
-#ifndef ARDUINO_H
+#ifndef ARDUINO
     #define byte char 
 #endif
+
+
+#define MOTORS 2 //How many motors will be available
+
+
+/*
+===================================
+Top module global wrapper variables
+===================================
+
+Variables are named according to their
+corresponding output module name
+*/
+
+//Buffer output (control/gui input)
+extern volatile float bufferPressure;
+extern volatile float bufferAirFlow;
+extern volatile float bufferAlarm; //Future implementation
+
+//Sensors output (buffer input)
+extern volatile float sensorsPressure;
+extern volatile float sensorsAirFlow;
+
+//GUI output (control input)
+extern volatile float guiRPM;
+extern volatile float guiIEratio;
+extern volatile float guiMaxPressure;
+extern volatile float guiMinVol;
+extern volatile float guiMaxVol;
+
+//EndStop switches output (control/motors input)
+
+
+//Control output (motors/sensors/gui input)
+
+
+
+
+
+
 
 
 /*
@@ -28,6 +68,11 @@ Control-related Globals
 
 //Actuator output reduction factor when max pressure is reached
 #define OUTPUT_REDUCTION_FACTOR 31.0/32.0 //Reduce output speed in 1/32 of current value
+
+
+
+
+
 
 
 
