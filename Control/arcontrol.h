@@ -1,3 +1,6 @@
+//#include "globals.h"
+#include "pinout.h"
+
 #ifndef ARCONTROL_H
 #define ARCONTROL_H
 
@@ -36,6 +39,10 @@ class arcontrol{
         float spRPM      = 0.0; //Respirations-per-minute set-point
         float spIEratio  = 0.0; //I:E ratio set-point
 
+
+        //IRM Motor-related variables
+        int motorSpeed[TOTAL_MOTORS];
+
         //IRM Control-related variables
         float controlSetPoint = 0.0;
 
@@ -51,6 +58,8 @@ class arcontrol{
         //IRM Flow Direction
         Direction currentDirection = INSP;
 
+        //IRM Expiration Clk Cycles
+        volatile unsigned long expirationClkCycles = 0;
 
 
         /*
@@ -73,11 +82,20 @@ class arcontrol{
         //IRM Updates current set-point value in PID controller
         void updateSetPoint(float sp);
 
+        //Check initial positions for individual motors and move once
+        int towardsHome(int motorIndex);
+
+        //Do full homing process
+        void goHome(void);
+
         //Override default MAX value if max pressure is reached
         void __reduceMaxPIDOut(float max);
 
         //Main control system method, should be called periodically
         float controlFlow(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio);
+
+        //Main control system method, should be called periodically. Left for future implementations
+        float controlFlow2(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio);
 
         //Compute current cycle volume
         float computeCurrentCycleVolume(float newDeltaVolume);
@@ -109,6 +127,12 @@ class arcontrol{
 
         //Set current cycle volume
         float setCurrentCycleVolume(float newVolume);
+
+        //Set independent motor speed
+        void setMotorSpeed(int motorIndex, int value);
+
+        //Get independent motor speed
+        int getMotorSpeed(int motorIndex);
 
 
 

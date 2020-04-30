@@ -2,6 +2,9 @@
 #include "pinout.h"
 #include "globals.h"
 #include "Pid.h"
+#include "pinout.h"
+#include "argpio.h"
+
 
 
 /*
@@ -26,6 +29,9 @@ ToDo:
 //PID Instantiation
 Pid pp(KP, KI, KD, MOTOR_MIN_OUT, MOTOR_MAX_OUT);
 
+//GPIO Instantiation
+argpio gp;
+
 /*
 ======================
 Constructor/Destructor
@@ -36,6 +42,7 @@ arcontrol::arcontrol(){
     this -> __resetInitParametersFlag(); //IRM initialization from GUI not done yet.
     this -> controlSetPoint = 0.0; //IRM Airflow set-point value
 
+    
 }
 
 //IRM Destructor: do nothing
@@ -78,6 +85,27 @@ void arcontrol::updateSetPoint(float sp){
     pp.pidSetPoint(sp);
 }
 
+int arcontrol::towardsHome(int motorIndex){
+    if(gp.dRead(START_ENDSTOP[motorIndex])){ //if endstop has been activated
+        this -> setMotorSpeed(motorIndex, MOTOR_MIN_OUT);  //Move motor backwards
+        return 0; //We haven't reached home in the specified motor yet
+    }else{
+        this -> setMotorSpeed(motorIndex, 0); //Stop motor motion
+        return 1; //We have reached home right now!
+    }
+}
+
+
+void arcontrol::goHome(void){
+    int i;
+    int ok = 0;
+    while(ok < 1){
+        for(i = 0; i < TOTAL_MOTORS; i++){
+            ok &= towardsHome(i);
+        }
+    }
+}
+
 
 /*
     Estrategia de control:
@@ -97,11 +125,85 @@ void arcontrol::updateSetPoint(float sp){
         - Relación I:E
         - Delta Volumen (Volumen Mínimo Ambu, Volumen Máximo Ambú)
 
-
 */
 
 
 float arcontrol::controlFlow(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
+    float newOutput; //Current output
+    float accumulatedCycleVolume;
+    float expirationPeriod;
+    volatile int homedMotors = 0;
+    int i;
+    if(this->currentDirection == INSP){ //If pushing air into patient's lungs
+
+        if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
+            this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
+        }
+
+       
+        //Compute current cycle accumulated volume
+        accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
+
+
+        //If maxvol hasn't been reached yet, keep pushing ambu
+        if(accumulatedCycleVolume < this->getSpMaxVol()){
+            
+            newOutput = pp.pidUpdate(currentFlow);
+
+        }else{
+            //Otherwise, stop motor and change currentDirection to EXPIRATION
+            this->setCurrentCycleVolume(this->getSpMaxVol()); //Now start decreasing volume next clock cycle
+            expirationPeriod = this -> __computeEDuration(this -> getSpRPM(), this -> getSpIeRatio()); //Expiration (open loop) period
+            this -> expirationClkCycles = 0; //Reset expiration clock cycles counter
+            this->currentDirection = EXPI;
+            homedMotors = 0; //Motors are not located in home position
+            pp.setNewMaxOutput(MOTOR_MAX_OUT); //Reset max motor speed to default value 
+            pp.resetIDvalues(); //Reset PID accumulated values
+
+            //Compute new negative PID slope for next respiration cycle (expiration)
+            //this->currentCycleSlope = this -> __computeESlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
+            newOutput = 0; //Momentaneusly pause motor to start direction reversion
+        }
+
+    }else if(this->currentDirection == EXPI){ //If current direction is expiration (pulling ambu out)
+
+        //Go to home until limit switches are activated (and keep counting elapsed time)
+        //Wait until expiration time has been reached
+        this -> expirationClkCycles++;
+        if(this -> expirationClkCycles < (long)(expirationPeriod/DT) ){ //Has expiration time passed by?
+            //If home hasn't been reached, keep moving motors to initial position
+            if(homedMotors < 1){
+                for(i = 0; i < TOTAL_MOTORS; i++){
+                    homedMotors &= towardsHome(i); //Be sure each motor is moved towards home position
+                }
+            }else{ //Else, just wait until expiration time has been reached
+                for(i = 0; i < TOTAL_MOTORS; i++){
+                    this -> setMotorSpeed(i, 0);//Be sure motors are stopped at this point
+                }
+            }
+        }else{ //If expiration cycle time has been reached, switch back to inspiration again
+            this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
+            this->setCurrentCycleVolume(this->getSpMinVol()); //Now strat increasing volume again on next cycle
+            this->currentDirection = INSP;
+            pp.resetIDvalues(); //Reset prior accumulated PID values
+            newOutput = 0; //Momentaneusly pause motor to start direction reversion
+        }     
+
+    }else{ //No other states have been planned. If entering an invalid state, just shut motors off.
+        pp.setNewMaxOutput(0);
+        pp.setNewMinOutput(0);
+        return 0; //Motors must be stopped
+    } 
+
+    return newOutput; //Return new motor speed value
+
+    
+
+}
+
+
+//Left here for future implementations
+float arcontrol::controlFlow2(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
     float newOutput; //Current output
     float accumulatedCycleVolume;
     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
@@ -189,6 +291,15 @@ float arcontrol::setCurrentCycleVolume(float newVolume){
     this->currentCycleVolume = newVolume;
 }
 
+
+//Set current motor speed for individual motor
+void arcontrol::setMotorSpeed(int motorIndex, int value){
+    this -> motorSpeed[motorIndex] = value;
+}
+
+int arcontrol::getMotorSpeed(int motorIndex){
+    return (this -> motorSpeed[motorIndex]);
+}
 
 
 /*
