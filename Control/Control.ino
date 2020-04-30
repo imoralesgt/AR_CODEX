@@ -1,6 +1,17 @@
 #include "arcontrol.h"
-#include "globals.h"
 #include "pinout.h"
+
+
+/*
+=================================================================
+ToDo:
+	- Wrappers para interacción entre módulos
+	- Establecer pines (en pinout.h) para funciones específicas
+	- Actualizar set points cuando vengan cambios desde la GUI
+
+=================================================================
+*/
+
 
 arcontrol controlador;
 
@@ -118,6 +129,9 @@ void loop(){
 	digitalWrite(PIN_MOTOR1, flagToggle);
 	
 	myFeedback = analogRead(A0);
+
+	controlador.goHome();
+
 	myOutput = controlador.controlFlow((float)(myFeedback/100.0), 1.8, 16.5, 0.4);
 	pidPs++;
 
