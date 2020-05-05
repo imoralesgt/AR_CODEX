@@ -43,6 +43,9 @@ class arcontrol{
         //IRM Motor-related variables
         int motorSpeed[TOTAL_MOTORS];
 
+        //IRM Motors have been homed?
+        volatile int motorsHomed = 0;
+
         //IRM Control-related variables
         float controlSetPoint = 0.0;
 
@@ -59,7 +62,7 @@ class arcontrol{
         Direction currentDirection = INSP;
 
         //IRM Expiration Clk Cycles
-        volatile unsigned long expirationClkCycles = 0;
+        long expirationClkCycles;
 
 
         /*
