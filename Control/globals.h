@@ -60,8 +60,8 @@ Control-related Globals
 #define KD 0.0
 
 //Set the actuator's output limits here
-#define MOTOR_MIN_OUT -255
-#define MOTOR_MAX_OUT 255
+#define MOTOR_MIN_OUT -100
+#define MOTOR_MAX_OUT 100
 
 //Discrete PID update period (seconds)
 #define DT 0.004 //4 miliseconds (250 Hz)

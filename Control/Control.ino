@@ -1,5 +1,6 @@
 #include "arcontrol.h"
 #include "pinout.h"
+#include "motorControlTest.h"
 
 
 /*
@@ -13,6 +14,13 @@ ToDo:
 */
 
 
+//MOTOR TEST VARIABLES - MUST BE DELETED LATER
+int currentDirection = 0;
+int currentSpeed = 0;
+
+//MOTOR TEST VARIABLES - MUST BE DELETED LATER
+
+
 arcontrol controlador;
 
 volatile unsigned int count = 0;
@@ -22,8 +30,6 @@ int printOk = 0;
 int intToggle = 0;
 int flagToggle = 0;
 volatile int timerDone = 0; //MUST BE VOLATILE TO ALLOW DYNAMIC IN-ISR MODIFICATION
-
-int intToggle2 = 0;
 
 float myOutput;
 float myFeedback;
@@ -164,6 +170,22 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 			printOk ^= 0x01;
 		}
 		count = 0;
+
+
+
+
+
+		//MOTOR TEST CODE - MUST BE DELETED LATER
+		if (++currentSpeed >= MOTOR_MIN_OUT){
+			currentSpeed = MOTOR_MIN_OUT;
+		}
+		motorSetSpeed(currentSpeed);
+		//MOTOR TEST CODE - MUST BE DELETED LATER
+
+
+
+
+
 	}
 
 	//Timer synchronization with loop() polling 
@@ -171,7 +193,4 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 	timerDone++;
 }
 
-ISR(TIMER1_COMPA_vect){
-	intToggle2 ^= 1;
-	digitalWrite(PIN_MOTOR2, intToggle2);
-}
+
