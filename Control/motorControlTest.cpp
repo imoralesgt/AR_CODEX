@@ -37,7 +37,7 @@ int motorComputeTimerFromSpeed(int speed){
 	const int MIN_TIMER = 49;
 	const int MAX_TIMER = 249;
 
-	return map(speed, MOTOR_MIN_OUT, MOTOR_MAX_OUT, MAX_TIMER, MIN_TIMER);
+	return (int)map(speed, MOTOR_MIN_OUT, MOTOR_MAX_OUT, MAX_TIMER, MIN_TIMER);
 }
 
 
