@@ -62,6 +62,7 @@ Control-related Globals
 //Set the actuator's output limits here
 #define MOTOR_MIN_OUT -100
 #define MOTOR_MAX_OUT 100
+#define SPEED_HYSTERESIS 5
 
 //Discrete PID update period (seconds)
 #define DT 0.004 //4 miliseconds (250 Hz)
