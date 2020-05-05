@@ -5,7 +5,7 @@
 
 volatile int intToggle2 = 0;
 
-int steppingEnabled = 0;
+volatile int steppingEnabled = 0;
 
 void motorSetDirection(int direction){
 	digitalWrite(PIN_DIRECTION, direction);
@@ -13,9 +13,9 @@ void motorSetDirection(int direction){
 
 void motorSetSpeed(int speed){
 	motorEnableSteppers();
-	if (speed < 0){
+	if (speed < (-1)*(SPEED_HYSTERESIS)){
 		motorSetDirection(1);
-	}else if(speed > 0){
+	}else if(speed > SPEED_HYSTERESIS){
 		motorSetDirection(0);
 	}else{
 		motorDisableSteppers();
@@ -34,10 +34,19 @@ void motorDisableSteppers(void){
 
 
 int motorComputeTimerFromSpeed(int speed){
-	const int MIN_TIMER = 49;
-	const int MAX_TIMER = 249;
+	const int MIN_TIMER = 249;
+	const int MAX_TIMER = 1999;
 
-	return (int)map(speed, MOTOR_MIN_OUT, MOTOR_MAX_OUT, MAX_TIMER, MIN_TIMER);
+	//Serial.println(speed);
+
+	if(speed < 0){
+		speed = (speed)*(-1);
+		return (int)map(speed, 0, (-1)*(MOTOR_MIN_OUT), MAX_TIMER, MIN_TIMER);
+	}else{
+		return (int)map(speed, 0, MOTOR_MAX_OUT, MAX_TIMER, MIN_TIMER);
+	}
+
+	//return (int)map(speed, MOTOR_MIN_OUT, MOTOR_MAX_OUT, MAX_TIMER, MIN_TIMER);
 }
 
 
