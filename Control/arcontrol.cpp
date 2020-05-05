@@ -75,6 +75,7 @@ int arcontrol::setInitParameters(float pressure, float minVol, float maxVol, flo
     //Setup initial motor & PID conditions
     this -> currentCycleSlope = __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
     this->setCurrentCycleVolume(0); //No air hasn't been pushed yet
+    this -> updateSetPoint(this->currentCycleSlope);
     this->currentDirection = INSP;
     pp.resetIDvalues(); 
     
@@ -86,12 +87,12 @@ void arcontrol::updateSetPoint(float sp){
 }
 
 int arcontrol::towardsHome(int motorIndex){
-    if(gp.dRead(START_ENDSTOP[motorIndex])){ //if endstop has been activated
-        this -> setMotorSpeed(motorIndex, MOTOR_MIN_OUT);  //Move motor backwards
-        return 0; //We haven't reached home in the specified motor yet
-    }else{
+    if(gp.dRead(START_ENDSTOP[motorIndex])){ //if home endstop has been activated
         this -> setMotorSpeed(motorIndex, 0); //Stop motor motion
         return 1; //We have reached home right now!
+    }else{
+        this -> setMotorSpeed(motorIndex, MOTOR_MIN_OUT);  //Move motor backwards
+        return 0; //We haven't reached home in the specified motor yet
     }
 }
 
@@ -99,11 +100,13 @@ int arcontrol::towardsHome(int motorIndex){
 void arcontrol::goHome(void){
     int i;
     int ok = 0;
-    while(ok < 1){
+    while(ok < TOTAL_MOTORS){
+        ok = 0;
         for(i = 0; i < TOTAL_MOTORS; i++){
-            ok &= towardsHome(i);
+            ok += towardsHome(i);
         }
     }
+    this -> motorsHomed = 1;
 }
 
 
@@ -130,9 +133,10 @@ void arcontrol::goHome(void){
 
 float arcontrol::controlFlow(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
     float newOutput; //Current output
-    float accumulatedCycleVolume;
+    static float accumulatedCycleVolume;
     float expirationPeriod;
-    volatile int homedMotors = 0;
+    static long maxExpirationCycles;
+    static int homedMotors;
     int i;
     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
 
@@ -143,7 +147,9 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure, float cur
        
         //Compute current cycle accumulated volume
         accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
+        this -> setCurrentCycleVolume(accumulatedCycleVolume);
 
+        //Serial.print(" Vol: "); Serial.println(accumulatedCycleVolume);
 
         //If maxvol hasn't been reached yet, keep pushing ambu
         if(accumulatedCycleVolume < this->getSpMaxVol()){
@@ -151,50 +157,77 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure, float cur
             newOutput = pp.pidUpdate(currentFlow);
 
         }else{
+            Serial.print("IN ");
+            Serial.println(accumulatedCycleVolume);
+
             //Otherwise, stop motor and change currentDirection to EXPIRATION
             this->setCurrentCycleVolume(this->getSpMaxVol()); //Now start decreasing volume next clock cycle
             expirationPeriod = this -> __computeEDuration(this -> getSpRPM(), this -> getSpIeRatio()); //Expiration (open loop) period
+            //Serial.print("EXP PER: "); Serial.println(expirationPeriod);
             this -> expirationClkCycles = 0; //Reset expiration clock cycles counter
             this->currentDirection = EXPI;
             homedMotors = 0; //Motors are not located in home position
             pp.setNewMaxOutput(MOTOR_MAX_OUT); //Reset max motor speed to default value 
             pp.resetIDvalues(); //Reset PID accumulated values
 
-            //Compute new negative PID slope for next respiration cycle (expiration)
-            //this->currentCycleSlope = this -> __computeESlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
-            newOutput = 0; //Momentaneusly pause motor to start direction reversion
+            maxExpirationCycles = (long)(expirationPeriod/(float)DT);
+
+            //Serial.print("MXEXPCYC: "); Serial.println(maxExpirationCycles);
+
+            
+            newOutput = MOTOR_MIN_OUT; //Momentaneusly pause motor to start direction reversion
         }
 
     }else if(this->currentDirection == EXPI){ //If current direction is expiration (pulling ambu out)
 
+        //Serial.print("OUT ");
+
         //Go to home until limit switches are activated (and keep counting elapsed time)
         //Wait until expiration time has been reached
-        this -> expirationClkCycles++;
-        if(this -> expirationClkCycles < (long)(expirationPeriod/DT) ){ //Has expiration time passed by?
+        this -> expirationClkCycles += 1;
+
+        //Serial.print(" CLKEXP: "); Serial.println(this -> expirationClkCycles);
+        //Serial.print(" MAXXPRCY: "); Serial.println(maxExpirationCycles);
+
+        if((this -> expirationClkCycles) < maxExpirationCycles){ //Has expiration time passed by?
             //If home hasn't been reached, keep moving motors to initial position
-            if(homedMotors < 1){
+            if(homedMotors < TOTAL_MOTORS){
                 for(i = 0; i < TOTAL_MOTORS; i++){
-                    homedMotors &= towardsHome(i); //Be sure each motor is moved towards home position
+                    homedMotors += towardsHome(i); //Be sure each motor is moved towards home position
+                    this -> setMotorSpeed(i, MOTOR_MIN_OUT);
                 }
+                Serial.println("TWRDS");
             }else{ //Else, just wait until expiration time has been reached
                 for(i = 0; i < TOTAL_MOTORS; i++){
                     this -> setMotorSpeed(i, 0);//Be sure motors are stopped at this point
                 }
+                Serial.println("HOMED");
             }
+
         }else{ //If expiration cycle time has been reached, switch back to inspiration again
+
+            Serial.println("MTRS HMD EXP");
+
             this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
             this->setCurrentCycleVolume(this->getSpMinVol()); //Now strat increasing volume again on next cycle
             this->currentDirection = INSP;
+            this -> updateSetPoint(this->currentCycleSlope);
             pp.resetIDvalues(); //Reset prior accumulated PID values
             newOutput = 0; //Momentaneusly pause motor to start direction reversion
         }     
 
+        
+
     }else{ //No other states have been planned. If entering an invalid state, just shut motors off.
         pp.setNewMaxOutput(0);
         pp.setNewMinOutput(0);
+        Serial.println("ERROR STATE");
         return 0; //Motors must be stopped
     } 
 
+
+    //Serial.print("CRTDIR: "); Serial.println(this -> currentDirection);
+    //Serial.print("SPD: "); Serial.println(newOutput);
     return newOutput; //Return new motor speed value
 
     
@@ -203,75 +236,77 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure, float cur
 
 
 //Left here for future implementations
-float arcontrol::controlFlow2(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
-    float newOutput; //Current output
-    float accumulatedCycleVolume;
-    if(this->currentDirection == INSP){ //If pushing air into patient's lungs
+// float arcontrol::controlFlow2(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
+//     float newOutput; //Current output
+//     float accumulatedCycleVolume;
+//     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
 
-        if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
-            this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
-        }
+//         if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
+//             this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
+//         }
 
        
-        //Compute current cycle accumulated volume
-        accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
+//         //Compute current cycle accumulated volume
+//         accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
 
 
-        //If maxvol hasn't been reached yet, keep pushing ambu
-        if(accumulatedCycleVolume < this->getSpMaxVol()){
+//         //If maxvol hasn't been reached yet, keep pushing ambu
+//         if(accumulatedCycleVolume < this->getSpMaxVol()){
             
-            newOutput = pp.pidUpdate(currentFlow);
+//             newOutput = pp.pidUpdate(currentFlow);
 
-        }else{
-            //Otherwise, stop motor and change currentDirection to EXPIRATION
-            this->setCurrentCycleVolume(this->getSpMaxVol()); //Now start decreasing volume next clock cycle
-            this->currentDirection = EXPI;
-            pp.setNewMaxOutput(MOTOR_MAX_OUT); //Reset max motor speed to default value 
-            pp.resetIDvalues(); //Reset PID accumulated values
+//         }else{
+//             //Otherwise, stop motor and change currentDirection to EXPIRATION
+//             this->setCurrentCycleVolume(this->getSpMaxVol()); //Now start decreasing volume next clock cycle
+//             this->currentDirection = EXPI;
+//             pp.setNewMaxOutput(MOTOR_MAX_OUT); //Reset max motor speed to default value 
+//             pp.resetIDvalues(); //Reset PID accumulated values
 
-            //Compute new negative PID slope for next respiration cycle (expiration)
-            this->currentCycleSlope = this -> __computeESlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
-            newOutput = 0; //Momentaneusly pause motor to start direction reversion
-        }
+//             //Compute new negative PID slope for next respiration cycle (expiration)
+//             this->currentCycleSlope = this -> __computeESlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
+//             newOutput = 0; //Momentaneusly pause motor to start direction reversion
+//         }
 
-    }else if(this->currentDirection == EXPI){ //If current direction is expiration (pulling ambu out)
-        //Limit switches MUST be checked in Motor Control Module. Despite of the value sent from this module,
-        //Motor Control Module must check switches before acting.
-        accumulatedCycleVolume = this->computeCurrentCycleVolume((currentFlow)*(-1)); //Negative direction
+//     }else if(this->currentDirection == EXPI){ //If current direction is expiration (pulling ambu out)
+//         //Limit switches MUST be checked in Motor Control Module. Despite of the value sent from this module,
+//         //Motor Control Module must check switches before acting.
+//         accumulatedCycleVolume = this->computeCurrentCycleVolume((currentFlow)*(-1)); //Negative direction
 
-        //If minvol hasn't been reached yet, keep pulling ambu out
-        if(accumulatedCycleVolume > this->getSpMinVol()){            
-            newOutput = pp.pidUpdate(currentFlow);         
-        }else{
-            //Compute new set point (flow), according to volume, IE, RPM, parameters sent from GUI
-            //Compute new positive PID slope for next respiration cycle (inspiration)
-            this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
+//         //If minvol hasn't been reached yet, keep pulling ambu out
+//         if(accumulatedCycleVolume > this->getSpMinVol()){            
+//             newOutput = pp.pidUpdate(currentFlow);         
+//         }else{
+//             //Compute new set point (flow), according to volume, IE, RPM, parameters sent from GUI
+//             //Compute new positive PID slope for next respiration cycle (inspiration)
+//             this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
 
-            this->setCurrentCycleVolume(this->getSpMinVol()); //Now strat increasing volume again on next cycle
-            this->currentDirection = INSP;
-            pp.resetIDvalues(); //Reset prior accumulated PID values
-            newOutput = 0; //Momentaneusly pause motor to start direction reversion
-        }
+//             this->setCurrentCycleVolume(this->getSpMinVol()); //Now strat increasing volume again on next cycle
+//             this->currentDirection = INSP;
+//             pp.resetIDvalues(); //Reset prior accumulated PID values
+//             newOutput = 0; //Momentaneusly pause motor to start direction reversion
+//         }
 
 
 
-    }else{ //No other states have been planned. If entering an invalid state, just shut motors off.
-        pp.setNewMaxOutput(0);
-        pp.setNewMinOutput(0);
-        return 0; //Motors must be stopped
-    } 
+//     }else{ //No other states have been planned. If entering an invalid state, just shut motors off.
+//         pp.setNewMaxOutput(0);
+//         pp.setNewMinOutput(0);
+//         return 0; //Motors must be stopped
+//     } 
 
-    return newOutput; //Return new motor speed value
+
+//     return newOutput; //Return new motor speed value
 
     
 
-}
+// }
 
 
 
 // Compute total cycle volume, based on flow
 float arcontrol::computeCurrentCycleVolume(float currentFlow){
     float lastVol = this->getCurrentCycleVolume();
+    //Serial.print(" LstVol: "); Serial.println(lastVol);
     return lastVol + (DT*currentFlow);
 }
 
@@ -323,6 +358,7 @@ float arcontrol::__computeIDuration(float rpm, float ieRatio){
 float arcontrol::__computeEDuration(float rpm, float ieRatio){
     float tResp = this -> __computeRespirationPeriod(rpm); //Compute respiration period in seconds
     float eDuration = tResp/(1 + ieRatio);  //Expiration duration (in SECONDS)
+    return eDuration;
 }
 
 
