@@ -9,13 +9,15 @@
 #define PIN_MOTOR0 9
 #define PIN_MOTOR1 8
 #define PIN_MOTOR2 7
-#define PIN_DIRECTION 6
+#define PIN_DIRECTION 2
 
 
-#define PIN_ENDSTOP0 1
-#define PIN_ENDSTOP1 2
-#define PIN_ENDSTOP2 3
-#define PIN_ENDSTOP3 4
+#define PIN_ENDSTOP0 10
+#define PIN_ENDSTOP1 11
+#define PIN_ENDSTOP2 12
+#define PIN_ENDSTOP3 15
+
+#define DEBUG_AMBU_DIRECTION 4
 
 
 const int MOTOR[] = {PIN_MOTOR0, PIN_MOTOR1};
