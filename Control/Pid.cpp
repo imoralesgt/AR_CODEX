@@ -1,5 +1,6 @@
 #include "Pid.h"
 #include "globals.h"
+#include "Arduino.h"
 
 //IRM Discrete PID library for Arduino
 
@@ -77,8 +78,9 @@ void Pid::setNewMaxOutput(float newMax){
 //IRM Feed PID with current sample and fetch next computed output value
 float Pid::pidUpdate(float currentValue){
 	float pValue, iValue, dValue, PID;
-	this->__setErrorValue(setPoint - currentValue); //IRM Compute current error value
+	this->__setErrorValue(this -> setPoint - currentValue); //IRM Compute current error value
 	
+	//Serial.print("SP: "); Serial.print(this -> setPoint); Serial.print(" CURVAL: "); Serial.println(currentValue);
 	
 	float err = this->__getErrorvalue(); //IRM Local updated error value during current sample
 
@@ -110,7 +112,7 @@ float Pid::pidUpdate(float currentValue){
 	float ki = this->__getKi(); //IRM Ki constant retreived from constructor
 	
 	//IRM Compute (I) component based on updated values times Ki constant
-	iValue = this->__getIntegratorValue() * ki;
+	iValue = i*ki;
 
 
 
