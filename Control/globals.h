@@ -55,8 +55,8 @@ Control-related Globals
 
 
 //IRM PID-specific parameters. Do NOT change unless you know what you're doing
-#define KP 1.0
-#define KI 0.3
+#define KP 5.0/10000.0
+#define KI 6.0/10000.0
 #define KD 0.0
 
 //Set the actuator's output limits here
