@@ -89,9 +89,11 @@ void arcontrol::updateSetPoint(float sp){
 int arcontrol::towardsHome(int motorIndex){
     if(gp.dRead(START_ENDSTOP[motorIndex])){ //if home endstop has been activated
         this -> setMotorSpeed(motorIndex, 0); //Stop motor motion
+        //Serial.println("HME");
         return 1; //We have reached home right now!
     }else{
         this -> setMotorSpeed(motorIndex, MOTOR_MIN_OUT);  //Move motor backwards
+        //Serial.println("TWDS");
         return 0; //We haven't reached home in the specified motor yet
     }
 }
@@ -196,13 +198,15 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure, float cur
                     homedMotors += towardsHome(i); //Be sure each motor is moved towards home position
                     this -> setMotorSpeed(i, MOTOR_MIN_OUT);
                 }
-                Serial.println("TWRDS");
+                //Serial.println("TWRDS");
             }else{ //Else, just wait until expiration time has been reached
                 for(i = 0; i < TOTAL_MOTORS; i++){
                     this -> setMotorSpeed(i, 0);//Be sure motors are stopped at this point
                 }
-                Serial.println("HOMED");
+                //Serial.println("HOMED");
             }
+
+            newOutput = this -> getMotorSpeed(0);
 
         }else{ //If expiration cycle time has been reached, switch back to inspiration again
 

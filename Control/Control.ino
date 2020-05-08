@@ -151,6 +151,7 @@ void loop(){
 
 	myOutput = controlador.controlFlow((float)(myFeedback), 1.8, 16.5, 0.3);
 	motorSetSpeed(myOutput);
+	//Serial.print("SPD: "); Serial.println(myOutput);
 	pidPs++;
 
 	if(currentState && printOk){
@@ -208,6 +209,7 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 	//While homing
 	if(controlador.motorsHomed < 1){
 		motorSetSpeed(MOTOR_MIN_OUT);
+		digitalWrite(DEBUG_AMBU_DIRECTION, 1);
 	}
 
 
