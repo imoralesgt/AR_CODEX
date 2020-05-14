@@ -13,14 +13,14 @@ void motorSetDirection(int direction){
 
 void motorSetSpeed(int speed){
 	motorEnableSteppers();
-	if (speed < (-1)*(SPEED_HYSTERESIS)){
+	if (speed < (int)(0 - SPEED_HYSTERESIS)){
 		motorSetDirection(1);
 		//Serial.println("BKWRDS");
 	}else if(speed > SPEED_HYSTERESIS){
 		motorSetDirection(0);
 		//Serial.println("FRWRD");
 	}else{
-		motorSetDirection(0);
+		//motorSetDirection(0);
 		motorDisableSteppers();
 		Serial.println("STOP");
 	}
