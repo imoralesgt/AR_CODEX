@@ -2,6 +2,7 @@
 #include "pinout.h"
 #include "motorControlTest.h"
 #include "argpio.h"
+#include "i2cComms.h"
 
 
 /*
@@ -125,6 +126,12 @@ void setup(){
 	//250 counts compare match generates interrupt
 	//Interrupt rate = 250 Hz
 
+	//I2C and buffers initialization
+	i2cSetup();
+
+
+
+
 	gpios.initIOs();
 
 	Serial.begin(115200);
@@ -163,6 +170,10 @@ void loop(){
 	
 
 	digitalWrite(DEBUG_AMBU_DIRECTION, controlador.currentDirection);
+
+	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
+
+	//Serial.println(i2c_sensData2[0]);
 
 	//Timer synchronization with Timer 2 ISR
 	timerDone = 0;
