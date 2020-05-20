@@ -82,6 +82,9 @@ class arcontrol{
         //IRM Gets init parameters from GUI I2C Controller, which are set as working set-points. Returns 0 if everything ok
         int setInitParameters(float pressure, float minVol, float maxVol, float rpm, float ieRatio);
 
+        //IRM Update control parameters on-the-fly
+        void updateControlParameters(float pressure, float minVol, float maxVol, float rpm, float ieRatio);
+
         //IRM Updates current set-point value in PID controller
         void updateSetPoint(float sp);
 
@@ -95,10 +98,10 @@ class arcontrol{
         void __reduceMaxPIDOut(float max);
 
         //Main control system method, should be called periodically
-        float controlFlow(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio);
+        float controlFlow(float currentFlow, float currentPressure);
 
         //Main control system method, should be called periodically. Left for future implementations
-        float controlFlow2(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio);
+        float controlFlow2(float currentFlow, float currentPressure);
 
         //Compute current cycle volume
         float computeCurrentCycleVolume(float newDeltaVolume);

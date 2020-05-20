@@ -82,6 +82,16 @@ int arcontrol::setInitParameters(float pressure, float minVol, float maxVol, flo
     return 0;
 }
 
+void arcontrol::updateControlParameters(float pressure, float minVol, float maxVol, float rpm, float ieRatio){
+    this -> __setSpPressure(pressure);
+    this -> __setSpRPM(rpm);
+    this -> __setSpIeRatio(ieRatio);
+
+    this -> __setSpMinVol(minVol);
+    this -> __setSpMaxVol(maxVol);
+    pp.resetIDvalues();
+}
+
 void arcontrol::updateSetPoint(float sp){
     pp.pidSetPoint(sp);
 }
@@ -133,7 +143,7 @@ void arcontrol::goHome(void){
 */
 
 
-float arcontrol::controlFlow(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
+float arcontrol::controlFlow(float currentFlow, float currentPressure){
     float newOutput; //Current output
     static float accumulatedCycleVolume;
     float expirationPeriod;
@@ -240,7 +250,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure, float cur
 
 
 //Left here for future implementations
-// float arcontrol::controlFlow2(float currentFlow, float currentPressure, float currentRPM, float currentIeRatio){
+// float arcontrol::controlFlow2(float currentFlow, float currentPressure){
 //     float newOutput; //Current output
 //     float accumulatedCycleVolume;
 //     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
