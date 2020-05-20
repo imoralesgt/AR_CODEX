@@ -15,8 +15,10 @@ int *pnt_sensData = sensData;         // pnt_sensData points to the sensData vec
 byte i2c_receivedParam[i2c_MAX_PARAM]; // This array contains the Set-point parameters received from GUI.
 byte *pnt_parameters = i2c_receivedParam;
 
+volatile int guiNewSetPoints; //New set-points arrived from GUI flag
 
-
+//sensData[3] = {PRESSURE, VOLUME, FLOW}
+//i2c_receivedParam[3] = {RPM, MAX_PRESSURE, MAX_VOLUME}
 
 
 // Request data from sensors by the master-mode i2c (SOFTWARE INTERFACE). NumBytes is the # of bytes to be read from the line.
@@ -100,6 +102,7 @@ void i2c_SetParameters(int BytesNum){
       Wire.read();
     }
   }
+  guiNewSetPoints = 1;
   //Serial.println((String)"Los parámetros establecidos por GUI son: " + i2c_receivedParam[0] + " | " + i2c_receivedParam[1] + " | " + i2c_receivedParam[2]);
 }
 
@@ -108,9 +111,13 @@ void i2c_SetParameters(int BytesNum){
 
 // ----------- SETUP ------------  
 extern void i2cSetup() {
+  guiNewSetPoints = 0; //Waiting for set-points to arrive
+  
   Wire.begin(SLAVE_ADDRESS);
   Wire.onRequest(i2c_empty);
   Wire.onReceive(i2c_SetParameters);
+
+
 }
 
 

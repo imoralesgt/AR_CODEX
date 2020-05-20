@@ -71,8 +71,8 @@ Control-related Globals
 #define OUTPUT_REDUCTION_FACTOR 31.0/32.0 //Reduce output speed in 1/32 of current value
 
 
-
-
+//Default IE Ratio if not sent from GUI
+#define DEFAULT_IE_RATIO 0.3
 
 
 

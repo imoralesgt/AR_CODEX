@@ -29,6 +29,8 @@ extern int *pnt_sensData;         // pnt_sensData points to the sensData vector 
 extern byte i2c_receivedParam[i2c_MAX_PARAM]; // This array contains the Set-point parameters received from GUI.
 extern byte *pnt_parameters;
 
+extern volatile int guiNewSetPoints;
+
 
 
 extern void i2c_Request(int NumBytes);

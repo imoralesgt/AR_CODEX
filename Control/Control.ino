@@ -131,7 +131,6 @@ void setup(){
 
 
 
-
 	gpios.initIOs();
 
 	Serial.begin(115200);
@@ -140,7 +139,14 @@ void setup(){
 
 	pinMode(A0, INPUT);
 
-	controlador.setInitParameters(4.0, 0.0, 800.0, 16.5, 0.3);
+
+	//Wait until first set points arrive from GUI
+	while(!guiNewSetPoints)
+		;
+
+
+	
+	controlador.setInitParameters(i2c_receivedParam[1], 0.0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
 
 	controlador.goHome();
 	
@@ -156,7 +162,15 @@ void loop(){
 	//myFeedback = 932;
 
 
-	myOutput = controlador.controlFlow((float)(myFeedback), 1.8, 16.5, 0.3);
+	//Update control parameters if new values arrive from GUI
+	if(guiNewSetPoints){
+		controlador.updateControlParameters((float) i2c_receivedParam[1], 0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
+		guiNewSetPoints = 0;
+	}
+
+
+	//myOutput = controlador.controlFlow((float)(myFeedback), 1.8);
+	myOutput = controlador.controlFlow((float)sensData[2], (float)sensData[0]);
 	motorSetSpeed(myOutput);
 	//Serial.print("SPD: "); Serial.println(myOutput);
 	pidPs++;
@@ -173,8 +187,11 @@ void loop(){
 
 	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
 
-	//Serial.println(i2c_sensData2[0]);
-
+	Serial.println("P,V,F: ");
+	Serial.println(sensData[0]);
+	Serial.println(sensData[1]);
+	Serial.println(sensData[2]);
+ 
 	//Timer synchronization with Timer 2 ISR
 	timerDone = 0;
 	while(timerDone < 1){
