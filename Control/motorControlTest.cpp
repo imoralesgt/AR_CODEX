@@ -3,12 +3,15 @@
 #include "globals.h"
 #include "Arduino.h"
 
+
+volatile int motorCurrentDir;
 volatile int intToggle2 = 0;
 
 volatile int steppingEnabled;
 
 void motorSetDirection(int direction){
-	digitalWrite(PIN_DIRECTION, direction);
+	digitalWrite(PIN_DIRECTION, direction); //REMOVE this instruction, as has been set inside the timer interrupt
+	motorCurrentDir = direction;
 }
 
 void motorSetSpeed(int speed){
@@ -73,6 +76,26 @@ int motorComputeTimerFromSpeed(int speed){
 
 
 ISR(TIMER1_COMPA_vect){
+	int i, startSwitchEnabled;
+
 	intToggle2 ^= 1;
 	digitalWrite(PIN_MOTOR2, (intToggle2&steppingEnabled));
+
+	/*
+	digitalWrite(PIN_DIRECTION, motorCurrentDir);
+
+	for(i = 0; i < TOTAL_MOTORS; i++){
+		startSwitchEnabled = digitalRead(START_ENDSTOP[i]);
+
+		if(!(motorCurrentDir&startSwitchEnabled)){
+			digitalWrite(MOTOR[i], (intToggle2&steppingEnabled));
+		}
+
+		//motorCurrentDir means motors are pulling out (retracting)
+		//startSwitchEnabled means start switch has been activated
+		//If both conditions are met, stop motor, otherwise, send a step 
+	}
+	*/
+
+	
 }
