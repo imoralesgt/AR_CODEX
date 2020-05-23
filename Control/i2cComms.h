@@ -5,10 +5,10 @@
 
 #define I2C_TIMEOUT 1000
 #define I2C_PULLUP 1
-#define SDA_PORT PORTC
-#define SDA_PIN 2 // = A2
-#define SCL_PORT PORTC
-#define SCL_PIN 3 // = A3
+#define SDA_PORT SOFT_I2C_PORT
+#define SDA_PIN SOFT_I2C_PORT_SDA // = A2
+#define SCL_PORT SOFT_I2C_PORT
+#define SCL_PIN SOFT_I2C_PORT_SCL // = A3
 
 /// GENERAL
 #define SLAVE_ADDRESS 0x22

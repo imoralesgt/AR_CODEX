@@ -1,4 +1,5 @@
 #include "i2cComms.h"
+#include "pinout.h"
 
 /// I2C SOFTWARE
 #include <SoftI2CMaster.h>      // Yes, defines before calling this function, it's a requirement of the library.
