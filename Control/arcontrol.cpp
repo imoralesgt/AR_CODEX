@@ -41,8 +41,6 @@ Constructor/Destructor
 arcontrol::arcontrol(){
     this -> __resetInitParametersFlag(); //IRM initialization from GUI not done yet.
     this -> controlSetPoint = 0.0; //IRM Airflow set-point value
-
-    
 }
 
 //IRM Destructor: do nothing

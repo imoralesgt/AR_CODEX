@@ -17,7 +17,7 @@ ToDo:
 
 
 //MOTOR TEST VARIABLES - MUST BE DELETED LATER
-int currentSpeed = -20;
+//int currentSpeed = -20;
 //MOTOR TEST VARIABLES - MUST BE DELETED LATER
 
 
@@ -41,19 +41,21 @@ unsigned long pidPs = 0;
 
 void setup(){
 
+	gpios.initIOs();
+
+	//LED for debugging only
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, 0);
-	pinMode(PIN_MOTOR0, OUTPUT);
-	digitalWrite(PIN_MOTOR0, 0);
 
-	pinMode(PIN_MOTOR1, OUTPUT);
-	digitalWrite(PIN_MOTOR1, 0);
+	//I2C and buffers initialization
+	i2cSetup();
 
-	pinMode(PIN_MOTOR2, OUTPUT);
-	digitalWrite(PIN_MOTOR2, 0);
+	//Wait until first set points arrive from GUI
+	while(!guiNewSetPoints)
+		;
 
-	pinMode(DEBUG_AMBU_DIRECTION, OUTPUT);
-	digitalWrite(DEBUG_AMBU_DIRECTION, 0);
+
+
 
 	/*
 	=============
@@ -81,13 +83,6 @@ void setup(){
 	//Comparator set to 249 counts (250 - 1)
 	OCR1A = 249;
 
-	/*
-	OCR1AH = 0x07; //High byte
-	TEMP = 0x07;
-	OCR1AL = 0xCF; //Low byte
-	*/
-
-	
 
 	//General interrupt enable bit set (Status Register)
 	//SREG |= 0x80;	 //Won't enable here, as Timer 2 setup is next
@@ -126,24 +121,12 @@ void setup(){
 	//250 counts compare match generates interrupt
 	//Interrupt rate = 250 Hz
 
-	//I2C and buffers initialization
-	i2cSetup();
-
-
-
-	gpios.initIOs();
-
 	Serial.begin(115200);
 
 	Serial.println("AR_CODEX");
 
-	pinMode(A0, INPUT);
-
-
-	//Wait until first set points arrive from GUI
-	while(!guiNewSetPoints)
-		;
-
+	//Temporarly using for analong input for control system
+	pinMode(A6, INPUT);
 
 	
 	controlador.setInitParameters(i2c_receivedParam[1], 0.0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
@@ -156,9 +139,9 @@ void setup(){
 
 void loop(){
 
-	digitalWrite(PIN_MOTOR1, flagToggle);
-	
-	myFeedback = analogRead(A0);
+	digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
+
+	myFeedback = analogRead(A6);
 	//myFeedback = 932;
 
 
@@ -181,9 +164,7 @@ void loop(){
 		printOk ^= printOk;
 	}
 
-	
-
-	digitalWrite(DEBUG_AMBU_DIRECTION, controlador.currentDirection);
+	//digitalWrite(DEBUG_AMBU_DIRECTION, controlador.currentDirection);
 
 	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
 
@@ -203,10 +184,8 @@ void loop(){
 
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 	intToggle ^= 1;
-
 	
-	digitalWrite(PIN_MOTOR0, intToggle);
-	//analogWrite(PIN_MOTOR1, myOutput);
+	//digitalWrite(DEBUG_AMBU_DIRECTION, intToggle); //We already know interrupts work fine, commenting this line out
 	if(++count == 599/4){ //600 miliseconds interrupt (min inspiration period)
 	//if(++count == 999/4){ //1000 miliseconds interrupt 
 		digitalWrite(LED_BUILTIN, currentState);
@@ -229,9 +208,6 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 		//MOTOR TEST CODE - MUST BE DELETED LATER
 
 
-
-
-
 	}
 
 	//While homing
@@ -246,4 +222,3 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 	timerDone = 1;
 
 }
-
