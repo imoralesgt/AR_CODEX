@@ -16,10 +16,16 @@ void argpio::initIOs(void){
     //Initialize motors and motor-related end/start stop switches
     for(i = 0; i < TOTAL_MOTORS; i++){
         this -> pSetup(MOTOR[i], OUTPUT); //Outputs
+        this -> dWrite(MOTOR[i], 0); //Clear outputs
         this -> pSetup(START_ENDSTOP[i], INPUT_PULLUP); //Inputs
         this -> pSetup(END_ENDSTOP[i], INPUT_PULLUP); //Inputs
     }
 
+    this -> pSetup(DEBUG_AMBU_DIRECTION, OUTPUT);
+    this -> dWrite(DEBUG_AMBU_DIRECTION, 0);
+
+    this -> pSetup(BUZZER_OUT, OUTPUT);
+    this -> dWrite(BUZZER_OUT, 0);
 
 }
 

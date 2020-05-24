@@ -7,7 +7,7 @@
 #endif
 
 
-#define MOTORS 2 //How many motors will be available
+#define MOTORS 2 //How many motors will be working simultaneously
 
 
 /*
@@ -73,14 +73,6 @@ Control-related Globals
 
 //Default IE Ratio if not sent from GUI
 #define DEFAULT_IE_RATIO 0.3
-
-
-
-
-
-
-
-
 
 
 
