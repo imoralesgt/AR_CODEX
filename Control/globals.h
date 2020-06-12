@@ -1,6 +1,27 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+
+/*
+DEFALT CONTROL UNITS:
+
+Volume = mililiters (ml)
+Pressure = cmH2O
+RPM = Respirations per minute (1/minute)
+IERatio = Dimensionless
+Flow = mililiters per minute (ml/min)
+*/
+
+//Conversion factors for incoming sensor data units
+#define DECIPASCALS_TO_CMH20 0.00101972 //1 dPa = 0.00101972 cmH2O
+#define DECILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE 100.0 //1 dL/min = 100 mL/min
+
+//Conversion factors for incoming GUI set points
+#define GUI_MAX_VOLUME_TO_MILILITERS 10.0
+#define GUI_MAX_PRESSURE 1.0
+#define GUI_RESPIRATION_RATIO 1.0
+#define GUI_IE_RATIO_NORMALIZATION 0.1
+
 //IRM Arduino workaround for GCC compilation in x86
 #ifndef ARDUINO
     #define byte char 
@@ -72,8 +93,7 @@ Control-related Globals
 
 
 //Default IE Ratio if not sent from GUI
-#define DEFAULT_IE_RATIO 0.3
-
+#define DEFAULT_IE_RATIO 0.3/GUI_IE_RATIO_NORMALIZATION
 
 
 

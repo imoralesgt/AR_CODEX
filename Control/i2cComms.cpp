@@ -18,7 +18,7 @@ byte *pnt_parameters = i2c_receivedParam;
 
 volatile int guiNewSetPoints; //New set-points arrived from GUI flag
 
-//sensData[3] = {PRESSURE, VOLUME, FLOW}
+//sensData[3] = {PRESSURE, FLOW, VOLUME}
 //i2c_receivedParam[3] = {RPM, MAX_PRESSURE, MAX_VOLUME}
 
 

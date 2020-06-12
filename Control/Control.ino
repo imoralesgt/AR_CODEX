@@ -129,7 +129,7 @@ void setup(){
 	pinMode(A6, INPUT);
 
 	
-	controlador.setInitParameters(i2c_receivedParam[1], 0.0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
+	controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
 	controlador.goHome();
 	
@@ -152,8 +152,8 @@ void loop(){
 	}
 
 
-	//myOutput = controlador.controlFlow((float)(myFeedback), 1.8);
-	myOutput = controlador.controlFlow((float)sensData[2], (float)sensData[0]);
+	//Updating real time data coming from sensors and applying conversion factors (more info at globals.h file)
+	myOutput = controlador.controlFlow((float)sensData[1]*DECILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE, (float)sensData[0]*DECIPASCALS_TO_CMH20);
 	motorSetSpeed(myOutput);
 	//Serial.print("SPD: "); Serial.println(myOutput);
 	pidPs++;
