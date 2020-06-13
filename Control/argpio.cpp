@@ -24,6 +24,15 @@ void argpio::initIOs(void){
     this -> pSetup(DEBUG_AMBU_DIRECTION, OUTPUT);
     this -> dWrite(DEBUG_AMBU_DIRECTION, 0);
 
+    this -> pSetup(VALVE0_OUTPUT, OUTPUT);
+    this -> dWrite(VALVE0_OUTPUT, 0);
+
+    this -> pSetup(VALVE1_OUTPUT, OUTPUT);
+    this -> dWrite(VALVE1_OUTPUT, 0);
+
+    this -> pSetup(VALVE2_OUTPUT, OUTPUT);
+    this -> dWrite(VALVE2_OUTPUT, 0);
+
     this -> pSetup(BUZZER_OUT, OUTPUT);
     this -> dWrite(BUZZER_OUT, 0);
 

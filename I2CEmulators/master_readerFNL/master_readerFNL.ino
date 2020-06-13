@@ -11,9 +11,9 @@
 
 #include <Wire.h>
 
-byte par1 = 14;
-byte par2 = 22;
-byte par3 = 23;
+byte par1 = 10; //RPM = 10 RPM
+byte par2 = 20; //MaxPres = 20 cmH2O
+byte par3 = 50; //MaxVol = 500 ml (50 sent)
 bool Status = false;
 byte BuffR[8];
 
@@ -37,6 +37,9 @@ void setPar(){
 void setup()
 {
   Wire.begin();        // join i2c bus (address optional for master)
+
+  delay(5000);
+  
   setPar();
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);  // start serial for output
@@ -58,6 +61,6 @@ void loop()
   if(contador == 20){
     contador = 0;
     setPar();
-    }
+  }
   delay(500);
 }

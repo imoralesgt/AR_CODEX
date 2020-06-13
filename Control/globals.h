@@ -49,19 +49,17 @@ extern volatile float bufferAlarm; //Future implementation
 extern volatile float sensorsPressure;
 extern volatile float sensorsAirFlow;
 
+//Sensor data after conversion factors applied
+extern volatile float sensorsConvertedPressure;
+extern volatile float sensorsConvertedAirFlow;
+
+
 //GUI output (control input)
 extern volatile float guiRPM;
 extern volatile float guiIEratio;
 extern volatile float guiMaxPressure;
 extern volatile float guiMinVol;
 extern volatile float guiMaxVol;
-
-//EndStop switches output (control/motors input)
-
-
-//Control output (motors/sensors/gui input)
-
-
 
 
 

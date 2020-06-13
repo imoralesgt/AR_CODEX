@@ -39,6 +39,9 @@ float myFeedback;
 unsigned long pidPs = 0;
 
 
+volatile float sensorsConvertedPressure;
+volatile float sensorsConvertedAirFlow;
+
 void setup(){
 
 	gpios.initIOs();
@@ -125,9 +128,6 @@ void setup(){
 
 	Serial.println("AR_CODEX");
 
-	//Temporarly using for analong input for control system
-	pinMode(A6, INPUT);
-
 	
 	controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
@@ -141,7 +141,6 @@ void loop(){
 
 	digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
 
-	myFeedback = analogRead(A6);
 	//myFeedback = 932;
 
 
@@ -151,9 +150,12 @@ void loop(){
 		guiNewSetPoints = 0;
 	}
 
+	
+	sensorsConvertedPressure = (float)sensData[0]*DECIPASCALS_TO_CMH20; 
+	sensorsConvertedAirFlow  = (float)sensData[1]*DECILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE;
 
 	//Updating real time data coming from sensors and applying conversion factors (more info at globals.h file)
-	myOutput = controlador.controlFlow((float)sensData[1]*DECILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE, (float)sensData[0]*DECIPASCALS_TO_CMH20);
+	myOutput = controlador.controlFlow(sensorsConvertedAirFlow, sensorsConvertedPressure);
 	motorSetSpeed(myOutput);
 	//Serial.print("SPD: "); Serial.println(myOutput);
 	pidPs++;
@@ -168,10 +170,9 @@ void loop(){
 
 	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
 
-	Serial.println("P,V,F: ");
-	Serial.println(sensData[0]);
-	Serial.println(sensData[1]);
-	Serial.println(sensData[2]);
+	Serial.println("P,F: ");
+	Serial.println(sensorsConvertedPressure);
+	Serial.println(sensorsConvertedAirFlow);
  
 	//Timer synchronization with Timer 2 ISR
 	timerDone = 0;
