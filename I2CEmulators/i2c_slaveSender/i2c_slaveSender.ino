@@ -26,7 +26,7 @@ void pack(int state, int sensors[3], int chksum){
 
 void setup()
 {
-  Wire.begin(2);                // join i2c bus with address #8 //
+  Wire.begin(2);                // join i2c bus with address #2 //
   Wire.onRequest(requestEvent); // register event
   Serial.begin(115200);
 }
