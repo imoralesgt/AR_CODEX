@@ -3,8 +3,9 @@
 
 #include "Arduino.h"
 
-#define I2C_TIMEOUT 1000
-#define I2C_PULLUP 1
+#define I2C_TIMEOUT 100
+//#define I2C_PULLUP 1
+#define I2C_FASTMODE 1
 #define SDA_PORT SOFT_I2C_PORT
 #define SDA_PIN SOFT_I2C_PORT_SDA // = A2
 #define SCL_PORT SOFT_I2C_PORT
@@ -12,7 +13,7 @@
 
 /// GENERAL
 #define SLAVE_ADDRESS 0x22
-#define SENS_ADDRESS 0x08
+#define SENS_ADDRESS 0x02
 #define i2c_SENS_DATA_SIZE 8   // Data size from SensorsData.
 #define i2c_MAX_PARAM 3   // ¿? Number of Bytes that are going to be sent from GUI.
 #define NUM_OF_SENSORS 3
