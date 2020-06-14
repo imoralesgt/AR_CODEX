@@ -146,7 +146,7 @@ void setup() {
 // -------------- MAIN VOID -------------
 void loop() {
   i2c_Request(8);
-  //delayMicroseconds(100);
+  delay(100);
   ledStatus = ledStatus > 0 ? 0 : 1;
   digitalWrite(LED_BUILTIN, ledStatus);
 }
