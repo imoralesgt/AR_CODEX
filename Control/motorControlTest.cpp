@@ -53,7 +53,7 @@ void motorDisableSteppers(void){
 
 
 int motorComputeTimerFromSpeed(int speed){
-	const int MIN_TIMER = 199;
+	const int MIN_TIMER = 99;
 	const int MAX_TIMER = 999;
 	int computedSpeed;
 
