@@ -1,0 +1,6 @@
+(fp_lib_table
+  (lib (name MODULE_ESP32-DEVKITC-32D)(type KiCad)(uri C:/Users/jefry/Downloads/arcodex-Sensores/Ventilator/Hardware/PCB/Sensores/MODULE_ESP32_DEVKITC_32D.pretty)(options "")(descr ""))
+  (lib (name 3296W-1-254LF)(type KiCad)(uri ${KIPRJMOD}/Pot/3296W-1-254LF)(options "")(descr ""))
+  (lib (name libs)(type KiCad)(uri ${KIPRJMOD}/libs)(options "")(descr ""))
+  (lib (name Socket_Arduino_Nano)(type KiCad)(uri ${KIPRJMOD}/Socket_Arduino_Nano.pretty)(options "")(descr ""))
+)

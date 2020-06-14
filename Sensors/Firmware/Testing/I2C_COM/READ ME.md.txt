@@ -1,0 +1,2 @@
+El codigo de envío es el realizado por el ing. Luis García, se adjunto el valor para el checksum y un codigo simple de MASTER I2C,
+simplemente para probar la transmisión.

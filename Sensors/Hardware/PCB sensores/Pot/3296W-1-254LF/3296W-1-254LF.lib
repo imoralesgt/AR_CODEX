@@ -1,0 +1,38 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# 3296W-1-254LF
+#
+DEF 3296W-1-254LF R 0 40 N N 1 L N
+F0 "R" -200 351 50 H V L BNN
+F1 "3296W-1-254LF" -200 -200 50 H V L BNN
+F2 "TRIM_3296W-1-254LF" 0 0 50 H I L BNN
+F3 "J. W. Miller" 0 0 50 H I L BNN
+F4 "MANUFACTURER RECOMMENDATIONS" 0 0 50 H I L BNN
+F5 "10/05" 0 0 50 H I L BNN
+DRAW
+P 2 0 0 6 -250 0 -230 0 N
+P 2 0 0 10 -230 0 -200 40 N
+P 2 0 0 10 -200 40 -150 -50 N
+P 2 0 0 10 -150 -50 -100 40 N
+P 2 0 0 10 -100 40 -50 -50 N
+P 2 0 0 10 -50 -50 0 40 N
+P 2 0 0 10 0 40 50 -50 N
+P 2 0 0 10 50 -50 100 40 N
+P 2 0 0 10 100 40 150 -50 N
+P 2 0 0 10 150 -50 200 40 N
+P 2 0 0 10 230 0 200 40 N
+P 2 0 0 6 230 0 250 0 N
+P 2 0 0 10 0 50 -50 100 N
+P 2 0 0 10 -50 100 50 100 N
+P 2 0 0 10 50 100 0 50 N
+P 3 0 0 10 -50 100 50 100 0 50 F
+X CCW 1 -350 0 100 R 40 40 0 0 P 
+X CW 3 350 0 100 L 40 40 0 0 P 
+X WIPER 2 0 200 100 D 40 40 0 0 P 
+ENDDRAW
+ENDDEF
+#
+# End Library

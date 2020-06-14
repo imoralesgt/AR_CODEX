@@ -1,0 +1,7 @@
+(sym_lib_table
+  (lib (name MPS-2100)(type Legacy)(uri ${KIPRJMOD}/libs/MPS-2107.lib)(options "")(descr ""))
+  (lib (name ESP32-DEVKITC-32D)(type Legacy)(uri ${KIPRJMOD}/libs/ESP32-DEVKITC-32D.lib)(options "")(descr ""))
+  (lib (name MPX10DP)(type Legacy)(uri ${KIPRJMOD}/libs/MPX10DP.lib)(options "")(descr ""))
+  (lib (name AD1101)(type Legacy)(uri ${KIPRJMOD}/libs/AD1101.lib)(options "")(descr ""))
+  (lib (name Sensores-rescue)(type Legacy)(uri ${KIPRJMOD}/Sensores-rescue.lib)(options "")(descr ""))
+)
