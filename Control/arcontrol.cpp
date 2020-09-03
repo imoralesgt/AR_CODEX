@@ -142,12 +142,13 @@ void arcontrol::goHome(void){
 
 
 float arcontrol::controlFlow(float currentFlow, float currentPressure){
-    float newOutput; //Current output
-    static float accumulatedCycleVolume;
+    volatile float newOutput; //Current output
+    volatile float accumulatedCycleVolume;
     float expirationPeriod;
     static long maxExpirationCycles;
     static int homedMotors;
     int i;
+
     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
 
         if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
@@ -159,7 +160,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
         accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
         this -> setCurrentCycleVolume(accumulatedCycleVolume);
 
-        //Serial.print(" Vol: "); Serial.println(accumulatedCycleVolume);
+        Serial.print("Vol: "); Serial.println(accumulatedCycleVolume); //Serial.print("Max: "); Serial.println(this -> getSpMaxVol());
 
         //If maxvol hasn't been reached yet, keep pushing ambu
         if(accumulatedCycleVolume < this->getSpMaxVol()){
@@ -168,12 +169,15 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
 
         }else{
             Serial.print("IN ");
-            Serial.println(accumulatedCycleVolume);
+            Serial.println(this -> getCurrentCycleVolume());
+
+            Serial.print("MAX ");
+            Serial.println(this -> getSpMaxVol());
 
             //Otherwise, stop motor and change currentDirection to EXPIRATION
             this->setCurrentCycleVolume(this->getSpMaxVol()); //Now start decreasing volume next clock cycle
             expirationPeriod = this -> __computeEDuration(this -> getSpRPM(), this -> getSpIeRatio()); //Expiration (open loop) period
-            //Serial.print("EXP PER: "); Serial.println(expirationPeriod);
+            Serial.print("EXP PER: "); Serial.println(expirationPeriod);
             this -> expirationClkCycles = 0; //Reset expiration clock cycles counter
             this->currentDirection = EXPI;
             homedMotors = 0; //Motors are not located in home position
@@ -190,13 +194,13 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
 
     }else if(this->currentDirection == EXPI){ //If current direction is expiration (pulling ambu out)
 
-        //Serial.print("OUT ");
+        //Serial.println("OUT ");
 
         //Go to home until limit switches are activated (and keep counting elapsed time)
         //Wait until expiration time has been reached
         this -> expirationClkCycles += 1;
 
-        //Serial.print(" CLKEXP: "); Serial.println(this -> expirationClkCycles);
+        Serial.print(" CLKEXP: "); Serial.println(this -> expirationClkCycles);
         //Serial.print(" MAXXPRCY: "); Serial.println(maxExpirationCycles);
 
         if((this -> expirationClkCycles) < maxExpirationCycles){ //Has expiration time passed by?
@@ -206,7 +210,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
                     homedMotors += towardsHome(i); //Be sure each motor is moved towards home position
                     this -> setMotorSpeed(i, MOTOR_MIN_OUT);
                 }
-                //Serial.println("TWRDS");
+                Serial.println("TWRDS");
             }else{ //Else, just wait until expiration time has been reached
                 for(i = 0; i < TOTAL_MOTORS; i++){
                     this -> setMotorSpeed(i, 0);//Be sure motors are stopped at this point
@@ -221,7 +225,8 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
             Serial.println("MTRS HMD EXP");
 
             this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
-            this->setCurrentCycleVolume(this->getSpMinVol()); //Now strat increasing volume again on next cycle
+            this->setCurrentCycleVolume(0.0); //Now strat increasing volume again on next cycle
+            accumulatedCycleVolume = 0;
             this->currentDirection = INSP;
             this -> updateSetPoint(this->currentCycleSlope);
             pp.resetIDvalues(); //Reset prior accumulated PID values
@@ -319,6 +324,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
 float arcontrol::computeCurrentCycleVolume(float currentFlow){
     float lastVol = this->getCurrentCycleVolume();
     //Serial.print(" LstVol: "); Serial.println(lastVol);
+    //Serial.println(currentFlow);
     return lastVol + (DT*currentFlow);
 }
 
@@ -336,6 +342,7 @@ float arcontrol::getCurrentCycleVolume(){
 //Set current cycle volume
 float arcontrol::setCurrentCycleVolume(float newVolume){
     this->currentCycleVolume = newVolume;
+    //Serial.println(newVolume); //IVAN  Debugging
 }
 
 

@@ -26,12 +26,15 @@ volatile int guiNewSetPoints; //New set-points arrived from GUI flag
 extern void i2c_Request(int NumBytes){
   i2c_start(SENS_ADDRESS);
   i2c_rep_start((SENS_ADDRESS<<1)|I2C_READ);
+  
+  //i2c_start(SENS_ADDRESS<<1 | I2C_READ);
+
   for(int i=0; i<=(NumBytes)-2; i++){
       *(i2c_buffer1+i) = i2c_read(false);
       //Serial.print(*(i2c_buffer1+i));
       //Serial.print(" | ");
     }
-  ////Serial.println(i2c_buffer1);
+  //Serial.println(i2c_buffer1);
   *(i2c_buffer1 + (NumBytes-1)) = i2c_read(true);
   //Serial.println(*(i2c_buffer1+(NumBytes-1)));
   i2c_stop();
@@ -54,7 +57,8 @@ void i2c_checkData() {
     }
   else{
     //Serial.print("Incorrect data, requesting for retransmission"); 
-    i2c_Request(8);}                  // if not, request for another transmission.
+    //i2c_Request(8); //IVAN Disabled retransmission request, as nested function calls created a stack overflow.
+    }                  // if not, request for another transmission.
   } 
 
 
@@ -80,6 +84,7 @@ void i2c_depack(){
   *(pnt_sensData+2) =  (*(i2c_buffer2+5) <<8 )  | *(i2c_buffer2+6);
   //Serial.print("CtlData is : ");
   //Serial.println((String) *(pnt_sensData)+" | "+ *(pnt_sensData+1) + " | " + *(pnt_sensData+2));
+  //Serial.println((String) *(pnt_sensData+1));
   }
 
 

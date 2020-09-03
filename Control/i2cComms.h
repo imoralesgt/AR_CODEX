@@ -13,7 +13,7 @@
 
 /// GENERAL
 #define SLAVE_ADDRESS 0x22
-#define SENS_ADDRESS 0x02
+#define SENS_ADDRESS 0x08
 #define i2c_SENS_DATA_SIZE 8   // Data size from SensorsData.
 #define i2c_MAX_PARAM 3   // ¿? Number of Bytes that are going to be sent from GUI.
 #define NUM_OF_SENSORS 3

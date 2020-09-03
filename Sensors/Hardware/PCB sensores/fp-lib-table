@@ -3,4 +3,6 @@
   (lib (name 3296W-1-254LF)(type KiCad)(uri ${KIPRJMOD}/Pot/3296W-1-254LF)(options "")(descr ""))
   (lib (name libs)(type KiCad)(uri ${KIPRJMOD}/libs)(options "")(descr ""))
   (lib (name Socket_Arduino_Nano)(type KiCad)(uri ${KIPRJMOD}/Socket_Arduino_Nano.pretty)(options "")(descr ""))
+  (lib (name SFM3300)(type KiCad)(uri ${KIPRJMOD}/SFM3300.pretty)(options "")(descr ""))
+  (lib (name Level_Shifter)(type KiCad)(uri ${KIPRJMOD}/Level_Shifter.pretty)(options "")(descr ""))
 )

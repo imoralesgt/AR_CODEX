@@ -35,6 +35,8 @@ volatile int timerDone = 0; //MUST BE VOLATILE TO ALLOW DYNAMIC IN-ISR MODIFICAT
 float myOutput;
 float myFeedback;
 
+volatile int myOutputInt;
+
 
 unsigned long pidPs = 0;
 
@@ -43,6 +45,8 @@ volatile float sensorsConvertedPressure;
 volatile float sensorsConvertedAirFlow;
 
 void setup(){
+
+	Serial.begin(115200);
 
 	gpios.initIOs();
 
@@ -54,10 +58,11 @@ void setup(){
 	i2cSetup();
 
 	//Wait until first set points arrive from GUI
-	while(!guiNewSetPoints)
+	while(!guiNewSetPoints){
 		;
+	}
 
-
+	Serial.println("Initial set-point values acquired!");
 
 
 	/*
@@ -114,6 +119,9 @@ void setup(){
 	//Prescaler /64 clk source
 	TCCR2B |= 0x04;
 
+	// Prescaler /1024 clk source
+	// TCCR2B |= 0x07;
+
 	//Comparator A register limit (overflow value)
 	OCR2A = 249; //250 - 1
 
@@ -124,14 +132,14 @@ void setup(){
 	//250 counts compare match generates interrupt
 	//Interrupt rate = 250 Hz
 
-	Serial.begin(115200);
+	
 
 	Serial.println("AR_CODEX");
 
 	
-	controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
+	//controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
-	//controlador.setInitParameters(30.0, 0.0, 600.0, 15.0, 0.3);
+	controlador.setInitParameters(30.0, 0.0, 150.0, 20.0, 0.3); //IVAN Default set points while debugging
 	controlador.goHome();
 	
 	
@@ -147,18 +155,24 @@ void loop(){
 
 	//Update control parameters if new values arrive from GUI
 	if(guiNewSetPoints){
-		controlador.updateControlParameters((float) i2c_receivedParam[1], 0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
-		guiNewSetPoints = 0;
+		//IVAN Temporarily disabled parameters update
+		// controlador.updateControlParameters((float) i2c_receivedParam[1], 0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
+		// guiNewSetPoints = 0;
 	}
 
 	
-	sensorsConvertedPressure = (float)sensData[0]*DECIPASCALS_TO_CMH20; 
-	sensorsConvertedAirFlow  = (float)sensData[1]*DECILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE;
+	sensorsConvertedPressure = ((float)(sensData[0])+PRESS_OFFSET)*PASCALS_TO_CMH20; 
+	//sensorsConvertedAirFlow  = abs(((float)sensData[1]+FLOW_OFFSET))*MILILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE;
+	sensorsConvertedAirFlow = (float)sensData[1]*MILILITERS_PER_MIN_TO_MILILITERS_PER_SECOND;
 
 	//Updating real time data coming from sensors and applying conversion factors (more info at globals.h file)
+	
+	
 	myOutput = controlador.controlFlow(sensorsConvertedAirFlow, sensorsConvertedPressure);
-	motorSetSpeed(myOutput);
-	//Serial.print("SPD: "); Serial.println(myOutput);
+	myOutputInt = (int) myOutput;
+	motorSetSpeed(myOutputInt);
+	
+	Serial.print("SPD: "); Serial.println(myOutputInt);
 	pidPs++;
 
 	if(currentState && printOk){
@@ -169,11 +183,25 @@ void loop(){
 
 	//digitalWrite(DEBUG_AMBU_DIRECTION, controlador.currentDirection);
 
-	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
+	
 
-	Serial.println("P,F: ");
-	Serial.println(sensorsConvertedPressure);
-	Serial.println(sensorsConvertedAirFlow);
+	//Serial.print("FLW: ");
+	//Serial.println(sensorsConvertedAirFlow);
+
+	//Serial.print("PRSS: ");
+	//Serial.println(sensorsConvertedPressure);
+
+	// Serial.print("P/F: ");
+	// Serial.print(sensorsConvertedPressure);
+	// Serial.print(" / ");
+	//Serial.println(sensorsConvertedAirFlow);
+
+	//Serial.println("P,F: ");
+	//Serial.println(sensorsConvertedPressure);
+	//Serial.println(",")
+	//Serial.println(sensorsConvertedAirFlow);
+
+	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
  
 	//Timer synchronization with Timer 2 ISR
 	timerDone = 0;

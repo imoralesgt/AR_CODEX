@@ -15,19 +15,23 @@ void motorSetDirection(int direction){
 }
 
 void motorSetSpeed(int speed){
-	motorEnableSteppers();
+	
 	if (speed < (int)(0 - SPEED_HYSTERESIS)){
 		motorSetDirection(1);
+		motorEnableSteppers();
+		OCR1A = motorComputeTimerFromSpeed(speed);
 		//Serial.println("BKWRDS");
 	}else if(speed > SPEED_HYSTERESIS){
 		motorSetDirection(0);
+		motorEnableSteppers();
+		OCR1A = motorComputeTimerFromSpeed(speed);
 		//Serial.println("FRWRD");
 	}else{
 		//motorSetDirection(0);
 		motorDisableSteppers();
-		Serial.println("STOP");
+		//Serial.println("STOP");
 	}
-	OCR1A = motorComputeTimerFromSpeed(speed);
+	
 }
 
 // void motorSetSpeed2(int index, int speed){
@@ -53,19 +57,21 @@ void motorDisableSteppers(void){
 
 
 int motorComputeTimerFromSpeed(int speed){
-	const int MIN_TIMER = 99;
-	const int MAX_TIMER = 999;
+	const int MIN_TIMER = 59;
+	const int MAX_TIMER = 99;
 	int computedSpeed;
 
 	//Serial.println(speed);
 
-	Serial.print("SPD: "); Serial.println(speed);
+	//Serial.print("SPD: "); Serial.println(speed);
 
 	if(speed < 0){
 		speed = (speed)*(-1);
 		computedSpeed =  (int)map(speed, 0, (-1)*(MOTOR_MIN_OUT), MAX_TIMER, MIN_TIMER);
-	}else{
+	}else if(speed > 0){
 		computedSpeed = (int)map(speed, 0, MOTOR_MAX_OUT, MAX_TIMER, MIN_TIMER);
+	}else{
+		return 0;
 	}
 
 	

@@ -1,4 +1,4 @@
-update=mar 09 jun 2020 10:04:19
+update=24/08/2020 12:21:03 a. m.
 version=1
 last_client=kicad
 [cvpcb]
@@ -17,7 +17,7 @@ SubpartIdSeparator=0
 SubpartFirstId=65
 NetFmtName=Pcbnew
 SpiceAjustPassiveValues=0
-LabSize=50
+LabSize=89
 ERC_TestSimilarLabels=1
 [pcbnew]
 version=1
@@ -37,7 +37,7 @@ MinMicroViaDrill=0.09999999999999999
 MinHoleToHole=0.25
 TrackWidth1=1
 TrackWidth2=0.5
-ViaDiameter1=3
+ViaDiameter1=2.5
 ViaDrill1=0.4
 ViaDiameter2=2.2
 ViaDrill2=0.4
@@ -239,7 +239,7 @@ Enabled=0
 Name=Default
 Clearance=0.4
 TrackWidth=1
-ViaDiameter=3
+ViaDiameter=2.5
 ViaDrill=0.4
 uViaDiameter=0.3
 uViaDrill=0.1

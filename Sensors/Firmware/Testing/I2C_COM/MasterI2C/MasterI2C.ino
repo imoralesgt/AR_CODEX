@@ -12,7 +12,7 @@ void setup()
 void loop()
 {
 
-  Wire.requestFrom(2, 8);    // request  8bytes from slave device #2
+  Wire.requestFrom(8, 8);    // request  8bytes from slave device #2
   i=0;
   while(Wire.available())    // slave may send less than requested
   { 

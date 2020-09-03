@@ -14,7 +14,12 @@ Flow = mililiters per minute (ml/min)
 
 //Conversion factors for incoming sensor data units
 #define DECIPASCALS_TO_CMH20 0.00101972 //1 dPa = 0.00101972 cmH2O
+#define PASCALS_TO_CMH20 0.0101972 //1 Pa = 0.0101972 cmH2O
 #define DECILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE 100.0 //1 dL/min = 100 mL/min
+#define MILILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE 1.0 //1 mL/min = 1 mL/min
+#define MILILITERS_PER_MIN_TO_MILILITERS_PER_SECOND 1.0/60.0 //1 mL/min = 1/60 mL/sec
+#define FLOW_OFFSET 0 //Zero offset equals to 1.6V from sensors board
+#define PRESS_OFFSET 0 //Zero offset for pressure
 
 //Conversion factors for incoming GUI set points
 #define GUI_MAX_VOLUME_TO_MILILITERS 10.0
@@ -74,14 +79,26 @@ Control-related Globals
 
 
 //IRM PID-specific parameters. Do NOT change unless you know what you're doing
-#define KP 5.0/10000.0
-#define KI 1.0/10000.0
-#define KD 3.0/10000.0
+// #define KP 5.0/10000.0
+// #define KI 1.0/10000.0
+// #define KD 3.0/10000.0
+
+
+#define KP 2.0/1000.0
+#define KI 1.0/1000.0
+#define KD 0.5/1000.0
+
+
+
+//#define KP 5.0
+//#define KI 1.0
+//#define KD 3.0
+
 
 //Set the actuator's output limits here
 #define MOTOR_MIN_OUT -100
 #define MOTOR_MAX_OUT 100
-#define SPEED_HYSTERESIS 5
+#define SPEED_HYSTERESIS 2
 
 //Discrete PID update period (seconds)
 #define DT 0.004 //4 miliseconds (250 Hz)
