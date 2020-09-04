@@ -160,7 +160,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
         accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
         this -> setCurrentCycleVolume(accumulatedCycleVolume);
 
-        Serial.print("Vol: "); Serial.println(accumulatedCycleVolume); //Serial.print("Max: "); Serial.println(this -> getSpMaxVol());
+        // Serial.print("Vol: "); Serial.println(accumulatedCycleVolume); //Serial.print("Max: "); Serial.println(this -> getSpMaxVol());
 
         //If maxvol hasn't been reached yet, keep pushing ambu
         if(accumulatedCycleVolume < this->getSpMaxVol()){

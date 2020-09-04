@@ -84,9 +84,9 @@ Control-related Globals
 // #define KD 3.0/10000.0
 
 
-#define KP 2.0/1000.0
-#define KI 1.0/1000.0
-#define KD 0.5/1000.0
+#define KP 1.0/1000.0
+#define KI 1.5/1000.0
+#define KD 0.0/1000.0
 
 
 
