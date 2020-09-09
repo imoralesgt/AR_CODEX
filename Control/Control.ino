@@ -139,7 +139,8 @@ void setup(){
 	
 	//controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
-	controlador.setInitParameters(30.0, 0.0, 250.0, 20.0, 0.35); //IVAN Default set points while debugging
+	// controlador.setInitParameters(30.0, 0.0, 250.0, 20.0, 0.35); //IVAN Default set points while debugging
+	controlador.setInitParameters(2.0, 0.0, 250.0, 20.0, 0.35); //IVAN Default set points while debugging
 	controlador.goHome();
 	
 	
@@ -172,7 +173,7 @@ void loop(){
 	myOutputInt = (int) myOutput;
 	motorSetSpeed(myOutputInt);
 	
-	Serial.print("SPD: "); Serial.println(myOutputInt);
+	//Serial.print("SPD: "); Serial.println(myOutputInt);
 	pidPs++;
 
 	if(currentState && printOk){
@@ -191,10 +192,10 @@ void loop(){
 	//Serial.print("PRSS: ");
 	//Serial.println(sensorsConvertedPressure);
 
-	// Serial.print("P/F: ");
-	// Serial.print(sensorsConvertedPressure);
-	// Serial.print(" / ");
-	//Serial.println(sensorsConvertedAirFlow);
+	Serial.print("P/F: ");
+	Serial.print(sensorsConvertedPressure);
+	Serial.print(" / ");
+	Serial.println(sensorsConvertedAirFlow);
 
 	//Serial.println("P,F: ");
 	//Serial.println(sensorsConvertedPressure);

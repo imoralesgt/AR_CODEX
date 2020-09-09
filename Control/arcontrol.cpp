@@ -144,6 +144,7 @@ void arcontrol::goHome(void){
 float arcontrol::controlFlow(float currentFlow, float currentPressure){
     volatile float newOutput; //Current output
     volatile float accumulatedCycleVolume;
+    static long accumulatedOverPressureCycles;
     float expirationPeriod;
     static long maxExpirationCycles;
     static int homedMotors;
@@ -152,7 +153,12 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
 
         if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
-            this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
+            if(++accumulatedOverPressureCycles < MAX_OVERPRESSURE_CYCLES){
+                this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
+            }else{
+                accumulatedOverPressureCycles = 0;
+                accumulatedCycleVolume = this->getSpMaxVol() + 1;
+            }
         }
 
        
@@ -231,6 +237,8 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
             this -> updateSetPoint(this->currentCycleSlope);
             pp.resetIDvalues(); //Reset prior accumulated PID values
             newOutput = 0; //Momentaneusly pause motor to start direction reversion
+
+            accumulatedOverPressureCycles = 0; 
         }     
 
         
@@ -405,6 +413,9 @@ void arcontrol::__reduceMaxPIDOut(float currentMax){
 
     //Min value untouched, as it's only used during expiration
     float newMax = (float) currentMax * OUTPUT_REDUCTION_FACTOR; 
+
+    //Be sure to reach max volume while overpressure condition met
+    newMax = newMax > MIN_MAX_OUTPUT ? newMax : MIN_MAX_OUTPUT;
 
     pp.setNewMaxOutput(newMax);
 

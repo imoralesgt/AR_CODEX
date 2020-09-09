@@ -106,6 +106,10 @@ Control-related Globals
 //Actuator output reduction factor when max pressure is reached
 #define OUTPUT_REDUCTION_FACTOR 31.0/32.0 //Reduce output speed in 1/32 of current value
 
+#define MIN_MAX_OUTPUT 5 //Minimum MAX Speed Output when overpressure reached
+
+#define MAX_OVERPRESSURE_CYCLES 25 //Switch back to expiration if MAX overpressure cycles exceeded
+
 
 //Default IE Ratio if not sent from GUI
 #define DEFAULT_IE_RATIO 0.3/GUI_IE_RATIO_NORMALIZATION
