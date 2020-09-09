@@ -152,19 +152,20 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
 
     if(this->currentDirection == INSP){ //If pushing air into patient's lungs
 
+       
+        //Compute current cycle accumulated volume
+        accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
+        this -> setCurrentCycleVolume(accumulatedCycleVolume);
+
+
         if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
             if(++accumulatedOverPressureCycles < MAX_OVERPRESSURE_CYCLES){
                 this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
             }else{
                 accumulatedOverPressureCycles = 0;
-                accumulatedCycleVolume = this->getSpMaxVol() + 1;
+                this -> setCurrentCycleVolume(this->getSpMaxVol() + 1);
             }
         }
-
-       
-        //Compute current cycle accumulated volume
-        accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
-        this -> setCurrentCycleVolume(accumulatedCycleVolume);
 
         // Serial.print("Vol: "); Serial.println(accumulatedCycleVolume); //Serial.print("Max: "); Serial.println(this -> getSpMaxVol());
 
