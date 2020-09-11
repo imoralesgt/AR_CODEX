@@ -225,8 +225,6 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
                 //Serial.println("HOMED");
             }
 
-            newOutput = this -> getMotorSpeed(0);
-
         }else{ //If expiration cycle time has been reached, switch back to inspiration again
 
             Serial.println("MTRS HMD EXP");
