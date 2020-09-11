@@ -58,7 +58,7 @@ void motorDisableSteppers(void){
 
 int motorComputeTimerFromSpeed(int speed){
 	const int MIN_TIMER = 59;
-	const int MAX_TIMER = 89;
+	const int MAX_TIMER = 109;
 	int computedSpeed;
 
 	//Serial.println(speed);
