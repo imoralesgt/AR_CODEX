@@ -196,18 +196,22 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
             //Serial.print("MXEXPCYC: "); Serial.println(maxExpirationCycles);
 
             
-            newOutput = MOTOR_MIN_OUT; //Momentaneusly pause motor to start direction reversion
+            newOutput = 0; //Momentaneusly pause motor to start direction reversion
         }
 
     }else if(this->currentDirection == EXPI){ //If current direction is expiration (pulling ambu out)
 
         //Serial.println("OUT ");
 
+        newOutput = MOTOR_MIN_OUT;
+
         //Go to home until limit switches are activated (and keep counting elapsed time)
         //Wait until expiration time has been reached
         this -> expirationClkCycles += 1;
 
-        Serial.print(" CLKEXP: "); Serial.println(this -> expirationClkCycles);
+        #ifdef DEBUG_MODE
+            Serial.print(" CLKEXP: "); Serial.println(this -> expirationClkCycles);
+        #endif
         //Serial.print(" MAXXPRCY: "); Serial.println(maxExpirationCycles);
 
         if((this -> expirationClkCycles) < maxExpirationCycles){ //Has expiration time passed by?
@@ -217,7 +221,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
                     homedMotors += towardsHome(i); //Be sure each motor is moved towards home position
                     this -> setMotorSpeed(i, MOTOR_MIN_OUT);
                 }
-                Serial.println("TWRDS");
+                //Serial.println("TWRDS");
             }else{ //Else, just wait until expiration time has been reached
                 for(i = 0; i < TOTAL_MOTORS; i++){
                     this -> setMotorSpeed(i, 0);//Be sure motors are stopped at this point
