@@ -1,6 +1,8 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+//#define DEBUG_MODE 1
+
 
 /*
 DEFALT CONTROL UNITS:
@@ -67,6 +69,13 @@ extern volatile float guiMinVol;
 extern volatile float guiMaxVol;
 
 
+/*
+=======================
+Motor-related Globals
+=======================
+*/
+#define MIN_MOTOR_TIMER 59
+#define MAX_MOTOR_TIMER 129
 
 
 
@@ -108,7 +117,7 @@ Control-related Globals
 
 #define MIN_MAX_OUTPUT 5 //Minimum MAX Speed Output when overpressure reached
 
-#define MAX_OVERPRESSURE_CYCLES 25 //Switch back to expiration if MAX overpressure cycles exceeded
+#define MAX_OVERPRESSURE_CYCLES 10 //Switch back to expiration if MAX overpressure cycles exceeded
 
 
 //Default IE Ratio if not sent from GUI

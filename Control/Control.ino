@@ -136,10 +136,10 @@ void setup(){
 
 	Serial.println("AR_CODEX");
 
-	
+	//IVAN Temporarily disabled parameters gathering from GUI.
 	//controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
-	controlador.setInitParameters(30.0, 0.0, 200.0, 20.0, 0.35); //IVAN Default set points while debugging
+	controlador.setInitParameters(30.0, 0.0, 250.0, 20.0, 0.35); //IVAN Default set points while debugging
 	controlador.goHome();
 	
 	
@@ -191,10 +191,15 @@ void loop(){
 	//Serial.print("PRSS: ");
 	//Serial.println(sensorsConvertedPressure);
 
-	Serial.print("P/F: ");
-	Serial.print(sensorsConvertedPressure);
-	Serial.print(" / ");
-	Serial.println(sensorsConvertedAirFlow);
+	
+	
+	#ifdef DEBUG_MODE
+		Serial.print("P/F: ");
+		Serial.print(sensorsConvertedPressure);
+		Serial.print(" / ");
+		Serial.println(sensorsConvertedAirFlow);
+	#endif
+
 
 	//Serial.println("P,F: ");
 	//Serial.println(sensorsConvertedPressure);
