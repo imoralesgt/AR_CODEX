@@ -3,8 +3,8 @@
 
 #include "Arduino.h"
 
-#define I2C_TIMEOUT 100
-//#define I2C_PULLUP 1
+#define I2C_TIMEOUT 20
+// #define I2C_PULLUP 1
 #define I2C_FASTMODE 1
 #define SDA_PORT SOFT_I2C_PORT
 #define SDA_PIN SOFT_I2C_PORT_SDA // = A2

@@ -10,7 +10,7 @@ volatile int intToggle2 = 0;
 volatile int steppingEnabled;
 
 void motorSetDirection(int direction){
-	digitalWrite(PIN_DIRECTION, direction); //REMOVE this instruction, as has been set inside the timer interrupt
+	//digitalWrite(PIN_DIRECTION, direction); //REMOVE this instruction, as has been set inside the timer interrupt
 	motorCurrentDir = direction;
 }
 

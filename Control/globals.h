@@ -74,7 +74,7 @@ extern volatile float guiMaxVol;
 Motor-related Globals
 =======================
 */
-#define MIN_MOTOR_TIMER 59
+#define MIN_MOTOR_TIMER 64
 #define MAX_MOTOR_TIMER 129
 
 
@@ -93,9 +93,9 @@ Control-related Globals
 // #define KD 3.0/10000.0
 
 
-#define KP 1.0/1000.0
+#define KP 3.0/1000.0
 #define KI 1.5/1000.0
-#define KD 0.0/1000.0
+#define KD 0.8/1000.0
 
 
 
@@ -111,6 +111,7 @@ Control-related Globals
 
 //Discrete PID update period (seconds)
 #define DT 0.004 //4 miliseconds (250 Hz)
+// #define DT 0.016 //16 miliseconds (62.5 Hz)
 
 //Actuator output reduction factor when max pressure is reached
 #define OUTPUT_REDUCTION_FACTOR 31.0/32.0 //Reduce output speed in 1/32 of current value
@@ -119,6 +120,7 @@ Control-related Globals
 
 #define MAX_OVERPRESSURE_CYCLES 10 //Switch back to expiration if MAX overpressure cycles exceeded
 
+#define MAX_INSPIRATION_CYCLES_OVERLOAD_RATIO 5.0 //If inspiration takes more than 1.5 times, go back to expiration immediately
 
 //Default IE Ratio if not sent from GUI
 #define DEFAULT_IE_RATIO 0.3/GUI_IE_RATIO_NORMALIZATION

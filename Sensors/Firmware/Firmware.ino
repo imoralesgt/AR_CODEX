@@ -68,10 +68,10 @@ void I2C_event()
     ValoresNormalizados[1] = Valuesensors[1];
     ValoresNormalizados[2] = Valuesensors[2];
     
-    /*Serial.print(ValoresNormalizados[0]);
-    Serial.print(",");
+//    Serial.println(ValoresNormalizados[0]);
+//    Serial.print(",");
     Serial.println(ValoresNormalizados[1]);
-    */
+    
     pack(state,ValoresNormalizados);  //empaquetado de I2C, modifica varible global //iic_pack[]
 
 

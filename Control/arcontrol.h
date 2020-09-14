@@ -65,6 +65,9 @@ class arcontrol{
         long expirationClkCycles;
 
 
+        //IRM Inspiration Clk Cycles
+        long inspirationClkCycles;
+
         /*
         ====================
         Global class methods

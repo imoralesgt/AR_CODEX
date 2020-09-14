@@ -76,6 +76,9 @@ int arcontrol::setInitParameters(float pressure, float minVol, float maxVol, flo
     this -> updateSetPoint(this->currentCycleSlope);
     this->currentDirection = INSP;
     pp.resetIDvalues(); 
+
+    this -> inspirationClkCycles = 0;
+
     
     return 0;
 }
@@ -147,6 +150,8 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
     static long accumulatedOverPressureCycles;
     float expirationPeriod;
     static long maxExpirationCycles;
+    static long maxInspirationCycles = 0;
+    
     static int homedMotors;
     int i;
 
@@ -157,7 +162,16 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
         accumulatedCycleVolume = this->computeCurrentCycleVolume(currentFlow);
         this -> setCurrentCycleVolume(accumulatedCycleVolume);
 
+        //If inspiration is taking longer than expected, maybe due to a motor stuck in the emergency endstop switch, go back to expiration mode
+        // this -> inspirationClkCycles += 1;
+        // if(this -> inspirationClkCycles > (long)(MAX_INSPIRATION_CYCLES_OVERLOAD_RATIO * maxInspirationCycles)){
+        //     this -> inspirationClkCycles = 0;
+        //     accumulatedCycleVolume = this -> getSpMaxVol() + 1; //Forcing state change to expiration mode
+        // }
 
+
+
+        //If an overpressure condition is detected
         if(currentPressure > this->getSpPressure()){ //If max. expected pressure is detected
             if(++accumulatedOverPressureCycles < MAX_OVERPRESSURE_CYCLES){
                 this->__reduceMaxPIDOut(pp.getMaxOut()); //Gradually reduce motor output speed (inspiration only)
@@ -185,6 +199,7 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
             this->setCurrentCycleVolume(this->getSpMaxVol()); //Now start decreasing volume next clock cycle
             expirationPeriod = this -> __computeEDuration(this -> getSpRPM(), this -> getSpIeRatio()); //Expiration (open loop) period
             Serial.print("EXP PER: "); Serial.println(expirationPeriod);
+            this -> inspirationClkCycles = 0; //Reset inspiration clock cycles counter
             this -> expirationClkCycles = 0; //Reset expiration clock cycles counter
             this->currentDirection = EXPI;
             homedMotors = 0; //Motors are not located in home position
@@ -232,6 +247,10 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
         }else{ //If expiration cycle time has been reached, switch back to inspiration again
 
             Serial.println("MTRS HMD EXP");
+
+            //Compute inspiration expected cycles, in case pressure and flow stop working, due to a stuck motor at the end (STOP END Activated)
+            maxInspirationCycles = (long)(this -> __computeIDuration(this->getSpRPM(), this->getSpIeRatio())/DT);
+            this -> inspirationClkCycles = 0;
 
             this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
             this->setCurrentCycleVolume(0.0); //Now strat increasing volume again on next cycle

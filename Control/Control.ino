@@ -26,9 +26,7 @@ argpio gpios;
 
 volatile unsigned int count = 0;
 volatile int currentState = 0;
-volatile int printOk = 0;
 
-volatile int intToggle = 0;
 volatile int flagToggle = 0;
 volatile int timerDone = 0; //MUST BE VOLATILE TO ALLOW DYNAMIC IN-ISR MODIFICATION
 
@@ -36,9 +34,6 @@ float myOutput;
 float myFeedback;
 
 volatile int myOutputInt;
-
-
-unsigned long pidPs = 0;
 
 
 volatile float sensorsConvertedPressure;
@@ -116,14 +111,16 @@ void setup(){
 	TCCR2A = 0x02;
 	TCCR2B &= ~0x08;
 
-	//Prescaler /64 clk source
-	TCCR2B |= 0x04;
-
-	// Prescaler /1024 clk source
-	// TCCR2B |= 0x07;
 
 	//Comparator A register limit (overflow value)
 	OCR2A = 249; //250 - 1
+
+	//Prescaler /64 clk source 250 Hz
+	TCCR2B |= 0x04;
+
+	//Prescaler /256 clk source //IVAN 62.5 Hz
+	// TCCR2B |= 0x06;
+
 
 	//General interrupt enable bit set (Status Register)
 	SREG |= 0x80;
@@ -139,7 +136,10 @@ void setup(){
 	//IVAN Temporarily disabled parameters gathering from GUI.
 	//controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
-	controlador.setInitParameters(30.0, 0.0, 250.0, 20.0, 0.35); //IVAN Default set points while debugging
+	controlador.setInitParameters(30.0, 0.0, 250.0, 15.0, 0.5); //IVAN Default set points while debugging
+	// controlador.setInitParameters(30.0, 0.0, 400.0, 25.0, 0.5); //IVAN Default set points while debugging
+	// controlador.setInitParameters(30.0, 0.0, 350.0, 10.0, 0.5); //IVAN Default set points while debugging
+
 	controlador.goHome();
 	
 	
@@ -148,7 +148,7 @@ void setup(){
 
 void loop(){
 
-	digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
+	
 
 	//myFeedback = 932;
 
@@ -172,14 +172,7 @@ void loop(){
 	myOutputInt = (int) myOutput;
 	motorSetSpeed(myOutputInt);
 	
-	//Serial.print("SPD: "); Serial.println(myOutputInt);
-	pidPs++;
-
-	if(currentState && printOk){
-		//Serial.println(pidPs);
-		pidPs = 0;
-		printOk ^= printOk;
-	}
+	Serial.print("SPD: "); Serial.println(myOutputInt);
 
 	//digitalWrite(DEBUG_AMBU_DIRECTION, controlador.currentDirection);
 
@@ -210,24 +203,25 @@ void loop(){
  
 	//Timer synchronization with Timer 2 ISR
 	timerDone = 0;
-	while(timerDone < 1){
+	flagToggle ^= 1;
+	digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
+
+	while(!timerDone){ //Two interrupts for 250 Hz synchronization
 	 	;
 	}
+
+	
 	
 }
 
 
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
-	intToggle ^= 1;
 	
-	//digitalWrite(DEBUG_AMBU_DIRECTION, intToggle); //We already know interrupts work fine, commenting this line out
+	/*
 	if(++count == 599/4){ //600 miliseconds interrupt (min inspiration period)
 	//if(++count == 999/4){ //1000 miliseconds interrupt 
 		digitalWrite(LED_BUILTIN, currentState);
 		currentState ^= 0x01; //Toggle LED_BUILTIN
-		if(currentState){
-			printOk ^= 0x01;
-		}
 		count = 0;
 
 
@@ -244,16 +238,16 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 
 
 	}
+	*/
 
 	//While homing
 	if(controlador.motorsHomed < 1){
 		motorSetSpeed(MOTOR_MIN_OUT);
-		digitalWrite(DEBUG_AMBU_DIRECTION, 1);
+		//digitalWrite(DEBUG_AMBU_DIRECTION, 1);
 	}
 
 
-	//Timer synchronization with loop() polling 
-	flagToggle ^= 1;
+	//Timer synchronization with loop() polling 	
 	timerDone = 1;
 
 }

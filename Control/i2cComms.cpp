@@ -57,7 +57,7 @@ void i2c_checkData() {
     }
   else{
     //Serial.print("Incorrect data, requesting for retransmission"); 
-    i2c_Request(8); //IVAN Disabled retransmission request, as nested function calls created a stack overflow.
+    //i2c_Request(8); //IVAN Disabled retransmission request, as nested function calls created a stack overflow.
     }                  // if not, request for another transmission.
   } 
 
