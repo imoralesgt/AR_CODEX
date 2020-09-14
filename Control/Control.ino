@@ -27,6 +27,7 @@ argpio gpios;
 volatile unsigned int count = 0;
 volatile int currentState = 0;
 
+
 volatile int flagToggle = 0;
 volatile int timerDone = 0; //MUST BE VOLATILE TO ALLOW DYNAMIC IN-ISR MODIFICATION
 
@@ -57,12 +58,16 @@ void setup(){
 		;
 	}
 
+	digitalWrite(LED_BUILTIN, 1);
+	delay(250);
+	digitalWrite(LED_BUILTIN, 0);
+
 	Serial.println("Initial set-point values acquired!");
 
 
 	/*
 	=============
-	TIMER 1 SETUP
+	TIMER 1 SETUP (MOTOR CONTROL)
 	=============
 	*/
 	//General interrupts enable bit clear (Status Register)
@@ -94,7 +99,7 @@ void setup(){
 
 	/*
 	=============
-	TIMER 2 SETUP
+	TIMER 2 SETUP (System Tick)
 	=============
 	*/
 
@@ -111,47 +116,43 @@ void setup(){
 	TCCR2A = 0x02;
 	TCCR2B &= ~0x08;
 
-
-	//Comparator A register limit (overflow value)
-	OCR2A = 249; //250 - 1
-
-	//Prescaler /64 clk source 250 Hz
-	TCCR2B |= 0x04;
-
-	//Prescaler /256 clk source //IVAN 62.5 Hz
-	// TCCR2B |= 0x06;
-
-
-	//General interrupt enable bit set (Status Register)
-	SREG |= 0x80;
-
 	//62.5 KHz Clk Source for Timer 2
 	//250 counts compare match generates interrupt
 	//Interrupt rate = 250 Hz
 
-	
+
+	// //Prescaler /64 clk source
+	TCCR2B |= 0x04;
+
+
+	//Comparator A register limit (overflow value)
+	OCR2A = 249; //250 - 1
+
+	//Prescaler /256 clk source //IVAN 125 Hz
+	// TCCR2B |= 0x06;
+
+	//Comparator A register limit (overflow value)
+	// OCR2A = 124; //125 - 1
+
+	//General interrupt enable bit set (Status Register)
+	SREG |= 0x80;
+
 
 	Serial.println("AR_CODEX");
 
 	//IVAN Temporarily disabled parameters gathering from GUI.
 	//controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
-	controlador.setInitParameters(30.0, 0.0, 250.0, 15.0, 0.5); //IVAN Default set points while debugging
+	// controlador.setInitParameters(30.0, 0.0, 250.0, 20.0, 0.4); //IVAN Default set points while debugging
 	// controlador.setInitParameters(30.0, 0.0, 400.0, 25.0, 0.5); //IVAN Default set points while debugging
-	// controlador.setInitParameters(30.0, 0.0, 350.0, 10.0, 0.5); //IVAN Default set points while debugging
+	controlador.setInitParameters(30.0, 0.0, 350.0, 10.0, 0.5); //IVAN Default set points while debugging
 
 	controlador.goHome();
-	
 	
 
 }
 
 void loop(){
-
-	
-
-	//myFeedback = 932;
-
 
 	//Update control parameters if new values arrive from GUI
 	if(guiNewSetPoints){
@@ -162,42 +163,25 @@ void loop(){
 
 	
 	sensorsConvertedPressure = ((float)(sensData[0])+PRESS_OFFSET)*PASCALS_TO_CMH20; 
-	//sensorsConvertedAirFlow  = abs(((float)sensData[1]+FLOW_OFFSET))*MILILITERS_PER_MIN_TO_MILILITERS_PER_MINUTE;
 	sensorsConvertedAirFlow = (float)sensData[1]*MILILITERS_PER_MIN_TO_MILILITERS_PER_SECOND;
 
 	//Updating real time data coming from sensors and applying conversion factors (more info at globals.h file)
-	
-	
 	myOutput = controlador.controlFlow(sensorsConvertedAirFlow, sensorsConvertedPressure);
 	myOutputInt = (int) myOutput;
 	motorSetSpeed(myOutputInt);
 	
-	Serial.print("SPD: "); Serial.println(myOutputInt);
-
-	//digitalWrite(DEBUG_AMBU_DIRECTION, controlador.currentDirection);
-
-	
-
-	//Serial.print("FLW: ");
-	//Serial.println(sensorsConvertedAirFlow);
-
-	//Serial.print("PRSS: ");
-	//Serial.println(sensorsConvertedPressure);
-
 	
 	
 	#ifdef DEBUG_MODE
+	
 		Serial.print("P/F: ");
 		Serial.print(sensorsConvertedPressure);
 		Serial.print(" / ");
 		Serial.println(sensorsConvertedAirFlow);
+		
+		Serial.print("SPD: "); Serial.println(myOutputInt);
+
 	#endif
-
-
-	//Serial.println("P,F: ");
-	//Serial.println(sensorsConvertedPressure);
-	//Serial.println(",")
-	//Serial.println(sensorsConvertedAirFlow);
 
 	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
  
@@ -206,39 +190,23 @@ void loop(){
 	flagToggle ^= 1;
 	digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
 
-	while(!timerDone){ //Two interrupts for 250 Hz synchronization
+	while(!timerDone){ //Interrupts for 250 Hz synchronization
 	 	;
 	}
 
-	
-	
 }
 
 
 ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
+	#ifdef DEBUG_MODE
+		if(++count == 599/4){ //600 miliseconds interrupt (min inspiration period)
+		//if(++count == 999/4){ //1000 miliseconds interrupt 
+			digitalWrite(LED_BUILTIN, currentState);
+			currentState ^= 0x01; //Toggle LED_BUILTIN
+			count = 0;
+		}
+	#endif
 	
-	/*
-	if(++count == 599/4){ //600 miliseconds interrupt (min inspiration period)
-	//if(++count == 999/4){ //1000 miliseconds interrupt 
-		digitalWrite(LED_BUILTIN, currentState);
-		currentState ^= 0x01; //Toggle LED_BUILTIN
-		count = 0;
-
-
-
-
-
-		//MOTOR TEST CODE - MUST BE DELETED LATER
-		//currentSpeed += 5;
-		//if (currentSpeed >= MOTOR_MAX_OUT){
-		//	currentSpeed = MOTOR_MIN_OUT;
-		//}
-		//motorSetSpeed(currentSpeed);
-		//MOTOR TEST CODE - MUST BE DELETED LATER
-
-
-	}
-	*/
 
 	//While homing
 	if(controlador.motorsHomed < 1){
@@ -246,8 +214,7 @@ ISR(TIMER2_COMPA_vect){ //Timer comparison interrupt
 		//digitalWrite(DEBUG_AMBU_DIRECTION, 1);
 	}
 
-
-	//Timer synchronization with loop() polling 	
+	//Timer synchronization with loop() polling 
 	timerDone = 1;
 
 }

@@ -146,7 +146,7 @@ void arcontrol::goHome(void){
 
 float arcontrol::controlFlow(float currentFlow, float currentPressure){
     volatile float newOutput; //Current output
-    volatile float accumulatedCycleVolume;
+    static float accumulatedCycleVolume;
     static long accumulatedOverPressureCycles;
     float expirationPeriod;
     static long maxExpirationCycles;
@@ -163,11 +163,15 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
         this -> setCurrentCycleVolume(accumulatedCycleVolume);
 
         //If inspiration is taking longer than expected, maybe due to a motor stuck in the emergency endstop switch, go back to expiration mode
-        // this -> inspirationClkCycles += 1;
-        // if(this -> inspirationClkCycles > (long)(MAX_INSPIRATION_CYCLES_OVERLOAD_RATIO * maxInspirationCycles)){
-        //     this -> inspirationClkCycles = 0;
-        //     accumulatedCycleVolume = this -> getSpMaxVol() + 1; //Forcing state change to expiration mode
-        // }
+        this -> inspirationClkCycles += 1;
+        #ifdef DEBUG_MODE
+            Serial.println(this -> inspirationClkCycles);
+        #endif
+        if(this -> inspirationClkCycles > maxInspirationCycles){
+            this -> inspirationClkCycles = 0;
+            accumulatedCycleVolume = this -> getSpMaxVol() + 1;
+            setCurrentCycleVolume(accumulatedCycleVolume); //Forcing state change to expiration mode
+        }
 
 
 
@@ -246,10 +250,15 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
 
         }else{ //If expiration cycle time has been reached, switch back to inspiration again
 
-            Serial.println("MTRS HMD EXP");
+            Serial.println("HOMED EXP");
 
             //Compute inspiration expected cycles, in case pressure and flow stop working, due to a stuck motor at the end (STOP END Activated)
-            maxInspirationCycles = (long)(this -> __computeIDuration(this->getSpRPM(), this->getSpIeRatio())/DT);
+            maxInspirationCycles = (long)((this -> __computeIDuration(this->getSpRPM(), this->getSpIeRatio())/DT) * MAX_INSPIRATION_CYCLES_OVERLOAD_RATIO);
+
+            #ifdef DEBUG_MODE
+                Serial.print("MAX_INS_CYC: "); Serial.println(maxInspirationCycles);
+            #endif 
+
             this -> inspirationClkCycles = 0;
 
             this->currentCycleSlope = this -> __computeISlope(this->getSpRPM(), this->getSpIeRatio(), this->getSpMinVol(), this->getSpMaxVol());
@@ -272,9 +281,6 @@ float arcontrol::controlFlow(float currentFlow, float currentPressure){
         return 0; //Motors must be stopped
     } 
 
-
-    //Serial.print("CRTDIR: "); Serial.println(this -> currentDirection);
-    //Serial.print("SPD: "); Serial.println(newOutput);
     return newOutput; //Return new motor speed value
 
     
