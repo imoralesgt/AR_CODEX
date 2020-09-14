@@ -46,6 +46,9 @@ class arcontrol{
         //IRM Motors have been homed?
         volatile int motorsHomed = 0;
 
+        //IRM Motors currently homing
+        int motorsHoming;
+
         //IRM Control-related variables
         float controlSetPoint = 0.0;
 

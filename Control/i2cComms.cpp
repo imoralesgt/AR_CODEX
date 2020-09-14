@@ -100,6 +100,11 @@ void i2c_empty() {
 
 // Receive and store the parameters set by the GUI
 void i2c_SetParameters(int BytesNum){
+
+  //Disable stepper motors interrupt while retrieving this data
+	TIMSK1 &= ~0x02; 	
+  PRR |= 0x80;
+
   for(int i = 0; i<BytesNum; i++){
     if(i < i2c_MAX_PARAM) {
       *(pnt_parameters + i) = Wire.read();
@@ -108,6 +113,12 @@ void i2c_SetParameters(int BytesNum){
       Wire.read();
     }
   }
+
+  //Enable stepper interrupts again
+  //Compare A interrupt enable
+	TIMSK1 |= 0x02; 	
+  PRR &= ~0x80;
+
   guiNewSetPoints = 1;
   //Serial.println((String)"Los parámetros establecidos por GUI son: " + i2c_receivedParam[0] + " | " + i2c_receivedParam[1] + " | " + i2c_receivedParam[2]);
 }

@@ -141,11 +141,11 @@ void setup(){
 	Serial.println("AR_CODEX");
 
 	//IVAN Temporarily disabled parameters gathering from GUI.
-	//controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
+	controlador.setInitParameters(i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
 
 	// controlador.setInitParameters(30.0, 0.0, 250.0, 20.0, 0.4); //IVAN Default set points while debugging
 	// controlador.setInitParameters(30.0, 0.0, 400.0, 25.0, 0.5); //IVAN Default set points while debugging
-	controlador.setInitParameters(30.0, 0.0, 350.0, 10.0, 0.5); //IVAN Default set points while debugging
+	// controlador.setInitParameters(30.0, 0.0, 350.0, 10.0, 0.5); //IVAN Default set points while debugging
 
 	controlador.goHome();
 	
@@ -157,41 +157,61 @@ void loop(){
 	//Update control parameters if new values arrive from GUI
 	if(guiNewSetPoints){
 		//IVAN Temporarily disabled parameters update
-		// controlador.updateControlParameters((float) i2c_receivedParam[1], 0, i2c_receivedParam[2], i2c_receivedParam[0], DEFAULT_IE_RATIO);
-		// guiNewSetPoints = 0;
+		
+		//Disable stepper motors interrupt while retrieving this data
+		TIMSK1 &= ~0x02; 	
+  		PRR |= 0x80;
+
+		motorSetSpeed(0);
+
+		controlador.updateControlParameters((float) i2c_receivedParam[1]*GUI_MAX_PRESSURE, 0.0, i2c_receivedParam[2]*GUI_MAX_VOLUME_TO_MILILITERS, i2c_receivedParam[0]*GUI_RESPIRATION_RATIO, DEFAULT_IE_RATIO*GUI_IE_RATIO_NORMALIZATION);
+		
+		//Enable stepper interrupts again
+  		//Compare A interrupt enable
+		TIMSK1 |= 0x02; 	
+  		PRR &= ~0x80;
+		
+		motorSetSpeed(MOTOR_MIN_OUT);
+		controlador.goHome();
+		guiNewSetPoints = 0;
 	}
 
-	
-	sensorsConvertedPressure = ((float)(sensData[0])+PRESS_OFFSET)*PASCALS_TO_CMH20; 
-	sensorsConvertedAirFlow = (float)sensData[1]*MILILITERS_PER_MIN_TO_MILILITERS_PER_SECOND;
-
-	//Updating real time data coming from sensors and applying conversion factors (more info at globals.h file)
-	myOutput = controlador.controlFlow(sensorsConvertedAirFlow, sensorsConvertedPressure);
-	myOutputInt = (int) myOutput;
-	motorSetSpeed(myOutputInt);
-	
-	
-	
-	#ifdef DEBUG_MODE
-	
-		Serial.print("P/F: ");
-		Serial.print(sensorsConvertedPressure);
-		Serial.print(" / ");
-		Serial.println(sensorsConvertedAirFlow);
+	if(!controlador.motorsHoming){
 		
-		Serial.print("SPD: "); Serial.println(myOutputInt);
+		sensorsConvertedPressure = ((float)(sensData[0])+PRESS_OFFSET)*PASCALS_TO_CMH20; 
+		sensorsConvertedAirFlow = (float)sensData[1]*MILILITERS_PER_MIN_TO_MILILITERS_PER_SECOND;
 
-	#endif
+		//Updating real time data coming from sensors and applying conversion factors (more info at globals.h file)
+		myOutput = controlador.controlFlow(sensorsConvertedAirFlow, sensorsConvertedPressure);
+		myOutputInt = (int) myOutput;
+		motorSetSpeed(myOutputInt);
+		
+		
+		
+		#ifdef DEBUG_MODE
+		
+			Serial.print("P/F: ");
+			Serial.print(sensorsConvertedPressure);
+			Serial.print(" / ");
+			Serial.println(sensorsConvertedAirFlow);
+			
+			Serial.print("SPD: "); Serial.println(myOutputInt);
 
-	i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
- 
-	//Timer synchronization with Timer 2 ISR
-	timerDone = 0;
-	flagToggle ^= 1;
-	digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
+		#endif
 
-	while(!timerDone){ //Interrupts for 250 Hz synchronization
-	 	;
+		i2c_Request(8); //Request Sensor Data via Software I2C Master Interface
+
+			//Timer synchronization with Timer 2 ISR
+		timerDone = 0;
+		flagToggle ^= 1;
+		digitalWrite(DEBUG_AMBU_DIRECTION, flagToggle); //Main loop synchronization signal with interrupts
+
+		while(!timerDone){ //Interrupts for 250 Hz synchronization
+			;
+		}
+
+	}else{
+		motorSetSpeed(MOTOR_MIN_OUT);
 	}
 
 }

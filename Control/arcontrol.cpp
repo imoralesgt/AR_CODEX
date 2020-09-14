@@ -113,12 +113,14 @@ int arcontrol::towardsHome(int motorIndex){
 void arcontrol::goHome(void){
     int i;
     int ok = 0;
+    this -> motorsHoming = 1;
     while(ok < TOTAL_MOTORS){
         ok = 0;
         for(i = 0; i < TOTAL_MOTORS; i++){
             ok += towardsHome(i);
         }
     }
+    this -> motorsHoming = 0;
     this -> motorsHomed = 1;
 }
 

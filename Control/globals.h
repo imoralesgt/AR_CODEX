@@ -75,7 +75,7 @@ Motor-related Globals
 =======================
 */
 #define MIN_MOTOR_TIMER 74 //Reducing this value, decreases torque and increases glitch occurences.
-#define MAX_MOTOR_TIMER 129
+#define MAX_MOTOR_TIMER 139
 
 
 
@@ -89,12 +89,12 @@ Control-related Globals
 //IRM PID-specific parameters. Do NOT change unless you know what you're doing
 #define KP 5.0/1000.0
 #define KI 1.5/1000.0
-#define KD 0.5/1000.0
+#define KD 0.1/1000.0
 
 //Set the actuator's output limits here
 #define MOTOR_MIN_OUT -100
 #define MOTOR_MAX_OUT 100
-#define SPEED_HYSTERESIS 5
+#define SPEED_HYSTERESIS 2
 
 //Discrete PID update period (seconds)
 #define DT 0.004 //4 miliseconds (250 Hz)
@@ -110,7 +110,7 @@ Control-related Globals
 #define MAX_INSPIRATION_CYCLES_OVERLOAD_RATIO 10.0 //If inspiration takes more than 1.5 times, go back to expiration immediately
 
 //Default IE Ratio if not sent from GUI
-#define DEFAULT_IE_RATIO 0.3/GUI_IE_RATIO_NORMALIZATION
+#define DEFAULT_IE_RATIO 0.4/GUI_IE_RATIO_NORMALIZATION
 
 
 
